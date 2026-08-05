@@ -21,7 +21,7 @@ export function ProfileModal() {
   
   const getAvatar = () => {
     if (email.includes("i.ds.orlik")) return "👨🏻";
-    if (email.includes("zynhelanna5")) return "👩🏼";
+    if (email.includes("zingelanna5")) return "👩🏼";
     return "👤";
   };
 
