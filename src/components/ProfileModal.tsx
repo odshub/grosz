@@ -1,80 +1,56 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, X, Fish, Moon, Sun, Monitor } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { LogOut, X, Moon, Sun, Monitor } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useTranslation } from "@/lib/i18n/client";
 import { setLocale, updateUserName, getUserNickname } from "@/app/actions";
 import { Check, Loader2 } from "lucide-react";
 
-const FishIcon = () => <Fish className="w-8 h-8" strokeWidth={1.5} />;
-
-const LionIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="1.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className="w-8 h-8"
-  >
-    {/* Mane (outer wavy circle effect via simple path) */}
-    <path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z" />
-    {/* Face (inner circle) */}
-    <circle cx="12" cy="12" r="6" />
-    {/* Eyes */}
-    <path d="M10 11h.01" />
-    <path d="M14 11h.01" />
-    {/* Nose/Mouth */}
-    <path d="M12 13v1" />
-    {/* Whiskers */}
-    <path d="M6 12h2" />
-    <path d="M16 12h2" />
-    <path d="M7 14l1.5-1" />
-    <path d="M15.5 13l1.5 1" />
-  </svg>
-);
-
 export function ProfileModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [avatar, setAvatar] = useState<"fish" | "lion">("lion");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [nickname, setNickname] = useState("");
   const [isSavingNickname, setIsSavingNickname] = useState(false);
   const { t, locale } = useTranslation();
+  const { data: session } = useSession();
+
+  const email = session?.user?.email || "";
+  
+  const getAvatar = () => {
+    if (email.includes("i.ds.orlik")) return "👨🏻";
+    if (email.includes("zynhelanna5")) return "👩🏼";
+    return "👤";
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
-      const saved = localStorage.getItem("groszyk_avatar");
-      if (saved === "fish" || saved === "lion") {
-        setAvatar(saved);
-      }
       getUserNickname().then(name => setNickname(name || ""));
     }, 0);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAvatarChange = (choice: "fish" | "lion") => {
-    setAvatar(choice);
-    localStorage.setItem("groszyk_avatar", choice);
-  };
-
   return (
     <>
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="p-2 rounded-full hover:bg-muted text-primary transition-colors"
-      >
-        {avatar === "fish" ? <FishIcon /> : <LionIcon />}
-      </button>
+      <div className="flex items-center gap-2">
+        {(nickname || email.split("@")[0]) && (
+          <span className="text-sm font-medium text-foreground truncate max-w-30">
+            {nickname || email.split("@")[0]}
+          </span>
+        )}
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-2xl leading-none pb-1 shrink-0"
+        >
+          {getAvatar()}
+        </button>
+      </div>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
           <div className="w-full max-w-sm bg-background rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden">
             <div className="p-4 flex items-center justify-between border-b border-border">
               <h2 className="text-xl font-bold">{t('profile.title')}</h2>
@@ -84,23 +60,6 @@ export function ProfileModal() {
             </div>
             
             <div className="p-6 pb-10 sm:pb-6 space-y-6">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-3 text-center">{t('profile.choose_avatar')}</p>
-                <div className="flex items-center justify-center gap-6">
-                  <button 
-                    onClick={() => handleAvatarChange("fish")}
-                    className={`p-4 rounded-xl border-2 transition-all ${avatar === "fish" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
-                  >
-                    <FishIcon />
-                  </button>
-                  <button 
-                    onClick={() => handleAvatarChange("lion")}
-                    className={`p-4 rounded-xl border-2 transition-all ${avatar === "lion" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
-                  >
-                    <LionIcon />
-                  </button>
-                </div>
-              </div>
               
               {/* Nickname Selection */}
               <div>

@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Grosz - Family Finance",
-  description: "Minimalist mobile-first family finance tracking",
+  title: "Groszyk - Family Finance",
+  description: "Minimalistic family finance tracking",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Grosz",
+    title: "Groszyk",
   },
 };
 
