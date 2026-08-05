@@ -37,7 +37,7 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
           <form action={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium mb-1">{t('modal.income.amount')}</label>
-              <input type="number" name="amount" step="0.01" required className="w-full p-3 bg-muted rounded-lg outline-none font-bold text-green-600 dark:text-green-400" placeholder="0.00" />
+              <input type="number" inputMode="decimal" name="amount" step="0.01" required className="w-full p-3 bg-muted rounded-lg outline-none font-bold text-green-600 dark:text-green-400" placeholder="0.00" />
             </div>
 
             <div>

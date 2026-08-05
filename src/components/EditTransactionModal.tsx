@@ -101,7 +101,7 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-1">{expenseType === "FLOATING" ? t('modal.edit_tx.budget') : t('modal.edit_tx.amount')}</label>
-                <input type="number" name="amount" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-3 bg-muted rounded-lg outline-none" placeholder="0.00" />
+                <input type="number" inputMode="decimal" name="amount" step="0.01" required value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-3 bg-muted rounded-lg outline-none" placeholder="0.00" />
               </div>
               <div className="w-1/3">
                 <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.currency')}</label>

@@ -135,7 +135,7 @@ export function EnvelopeDetailsModal({ envelope, isSharedPage = false, onClose }
           <form action={handleTransactionSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">{t('modal.envelope.amount_currency')} ({envelope.currency})</label>
-              <input type="number" step="0.01" min="0.01" name="amount" required className="w-full p-3 bg-muted rounded-lg outline-none text-xl font-medium" placeholder="0.00" />
+              <input type="number" inputMode="decimal" step="0.01" min="0.01" name="amount" required className="w-full p-3 bg-muted rounded-lg outline-none text-xl font-medium" placeholder="0.00" />
             </div>
             <div>
             <label className="text-sm font-medium">{t('modal.envelope.comment')}</label>

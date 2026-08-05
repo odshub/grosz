@@ -122,7 +122,7 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
           <form id="new-purchase-form" action={handleSubmit} className="flex flex-col gap-3 w-full mx-auto">
             <div className="flex gap-2 w-full">
               <input type="text" name="label" placeholder={t('modal.floating.input_what') as string} className="flex-1 min-w-0 p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all" required />
-              <input type="number" name="amount" step="0.01" placeholder={t('modal.floating.input_amount') as string} className="w-24 shrink-0 p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all font-semibold" required />
+              <input type="number" inputMode="decimal" name="amount" step="0.01" placeholder={t('modal.floating.input_amount') as string} className="w-24 shrink-0 p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all font-semibold" required />
             </div>
             <button disabled={loading} type="submit" className="w-full py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl disabled:opacity-50 transition-all hover:bg-primary/90 active:scale-95 shadow-md flex items-center justify-center">
               {loading ? (

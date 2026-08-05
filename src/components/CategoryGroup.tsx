@@ -95,7 +95,7 @@ export function CategoryGroup({
             key={tx.id}
             id={tx.id}
             amount={Number(tx.amount)}
-            currency={tx.currency as any}
+            currency={tx.currency as "PLN" | "USD" | "EUR"}
             type={tx.type}
             categoryName={tx.categories?.name || "Без категорії"}
             categoryColor={tx.categories?.color || "#cccccc"}
@@ -150,8 +150,8 @@ export function CategoryGroup({
         <EditTransactionModal
           transaction={{
             id: transactionToEdit.id,
-            amount: Number(transactionToEdit.amount).toString(),
-            currency: transactionToEdit.currency as any,
+            amount: Number(transactionToEdit.amount),
+            currency: transactionToEdit.currency as "PLN" | "USD" | "EUR",
             type: transactionToEdit.type,
             label: transactionToEdit.label || null,
             categoryId: transactionToEdit.category_id,

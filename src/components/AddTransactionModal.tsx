@@ -68,7 +68,7 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories 
             
             <div>
               <label className="block text-sm font-medium mb-1">{expenseType === "FLOATING" ? t('modal.floating.budget') : t('modal.expense.amount_sum')}</label>
-              <input type="number" name="amount" step="0.01" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder="0.00" />
+              <input type="number" inputMode="decimal" name="amount" step="0.01" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder="0.00" />
             </div>
 
             {/* Category Section */}
