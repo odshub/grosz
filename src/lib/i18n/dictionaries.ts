@@ -7,6 +7,7 @@ export const dictionaries = {
     'nav.notes': 'Нотатки',
     'app.title': 'Groszyk',
     'app.subtitle': 'Сімейні фінанси',
+    'app.loading': 'Завантаження...',
 
     // Shared Header
     'header.personal_budget': 'Мій бюджет',
@@ -188,6 +189,7 @@ export const dictionaries = {
     'nav.notes': 'Заметки',
     'app.title': 'Groszyk',
     'app.subtitle': 'Семейные финансы',
+    'app.loading': 'Загрузка...',
 
     // Shared Header
     'header.personal_budget': 'Мой бюджет',
