@@ -187,12 +187,14 @@ export async function addEnvelope(formData: FormData) {
   const { user } = await getCurrentUser();
   const name = formData.get("name") as string;
   const currency = (formData.get("currency") as "PLN" | "USD" | "EUR") || "PLN";
+  const icon = (formData.get("icon") as "cash" | "credit") || "cash";
   const isShared = formData.get("isShared") === "true";
   const color = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
   await supabaseAdmin.from("tags").insert({
     name,
     currency,
+    icon,
     color,
     user_id: user.id,
     scope: isShared ? "SHARED" : "PERSONAL",

@@ -6,12 +6,14 @@ import { AddEnvelopeModal } from "./AddEnvelopeModal";
 import { EnvelopeDetailsModal } from "./EnvelopeDetailsModal";
 import { getCurrencySymbol, getCurrencyColor } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/client";
+import { Wallet, CreditCard } from "lucide-react";
 
 type Envelope = {
   id: string;
   name: string;
   currency: "PLN" | "USD" | "EUR";
   color: string;
+  icon?: string;
   transactions: { id: string; amount: number | string; type: string; is_paid?: boolean; created_at: string; label?: string | null; users?: { email?: string | null } | null }[] | null;
   scope: string;
 };
@@ -51,8 +53,11 @@ export function EnvelopesList({ envelopes, isSharedPage, currentMonthStart }: { 
               className="p-4 bg-card rounded-xl border border-border shadow-sm flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-colors active:scale-95"
             >
               <div>
-                <p className="font-medium">{env.name}</p>
-                <p className={`text-xl font-bold mt-1 ${getCurrencyColor(env.currency)}`}>
+                <div className="flex items-center gap-2">
+                  {env.icon === 'credit' ? <CreditCard className="w-4 h-4 text-muted-foreground" /> : <Wallet className="w-4 h-4 text-muted-foreground" />}
+                  <p className="font-medium">{env.name}</p>
+                </div>
+                <p className={`text-xl font-bold mt-2 ${getCurrencyColor(env.currency)}`}>
                   {envBalance.toFixed(2)} {getCurrencySymbol(env.currency)}
                 </p>
               </div>

@@ -176,6 +176,7 @@ export const dictionaries = {
     'page.history': 'Історія операцій',
     'page.notes': 'Нотатки',
     'page.notes_desc': 'Зберігайте ідеї, списки покупок або нагадування. Додавайте #теги для швидкого пошуку.',
+    'page.planned_expenses': 'Заплановані витрати',
 
     // Categories
     'cat.manage_categories': 'Управління категоріями',
@@ -365,6 +366,7 @@ export const dictionaries = {
     'page.history': 'История операций',
     'page.notes': 'Заметки',
     'page.notes_desc': 'Сохраняйте идеи, списки покупок или напоминания. Добавляйте #теги для быстрого поиска.',
+    'page.planned_expenses': 'Запланированные расходы',
 
     // Categories
     'cat.manage_categories': 'Управление категориями',

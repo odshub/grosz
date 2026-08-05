@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { addTransaction, deleteEnvelope } from "@/app/actions";
-import { Trash2 } from "lucide-react";
+import { Trash2, Wallet, CreditCard } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDialog } from "./DialogProvider";
 
@@ -21,6 +21,7 @@ type Envelope = {
   name: string;
   currency: "PLN" | "USD" | "EUR";
   color: string;
+  icon?: string;
   transactions: Transaction[] | null;
   scope: string;
 };
@@ -70,7 +71,10 @@ export function EnvelopeDetailsModal({ envelope, isSharedPage = false, onClose }
           >
             {view === "DETAILS" ? "✕" : "←"}
           </button>
-          <h2 className="text-xl font-bold">{envelope.name}</h2>
+          <div className="flex items-center gap-2">
+            {envelope.icon === 'credit' ? <CreditCard className="w-5 h-5 text-muted-foreground" /> : <Wallet className="w-5 h-5 text-muted-foreground" />}
+            <h2 className="text-xl font-bold">{envelope.name}</h2>
+          </div>
           <div className="w-8">
             {view === "DETAILS" && (
               <button 

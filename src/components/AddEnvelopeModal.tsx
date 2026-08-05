@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { addEnvelope } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
+import { Wallet, CreditCard } from "lucide-react";
 
 export function AddEnvelopeModal({ onClose, isSharedPage = false }: { onClose: () => void, isSharedPage?: boolean }) {
   const [loading, setLoading] = useState(false);
+  const [icon, setIcon] = useState<"cash" | "credit">("cash");
   const { t } = useTranslation();
 
   async function handleSubmit(formData: FormData) {
@@ -26,6 +28,7 @@ export function AddEnvelopeModal({ onClose, isSharedPage = false }: { onClose: (
         </div>
         <form action={handleSubmit} className="space-y-4">
           <input type="hidden" name="isShared" value={isSharedPage ? "true" : "false"} />
+          <input type="hidden" name="icon" value={icon} />
           <div>
             <label className="block text-sm font-medium mb-1">{t('modal.envelope.name_label')}</label>
             <input type="text" name="name" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder={t('modal.envelope.name_placeholder') as string} />
@@ -37,6 +40,27 @@ export function AddEnvelopeModal({ onClose, isSharedPage = false }: { onClose: (
               <option value="USD">USD ($)</option>
               <option value="EUR">EUR (€)</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Тип конверта</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setIcon("cash")}
+                className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${icon === 'cash' ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border hover:bg-muted'}`}
+              >
+                <Wallet className="w-4 h-4" />
+                <span>Cash</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIcon("credit")}
+                className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${icon === 'credit' ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border hover:bg-muted'}`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Credit</span>
+              </button>
+            </div>
           </div>
           <button disabled={loading} type="submit" className="w-full p-4 bg-primary text-primary-foreground font-bold rounded-xl mt-4">
             {loading ? t('modal.envelope.creating') : t('modal.envelope.create_btn')}
