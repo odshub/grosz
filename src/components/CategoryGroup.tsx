@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { TransactionItem } from "./TransactionItem";
 import { SelectTransactionModal } from "./SelectTransactionModal";
 import { EditTransactionModal } from "./EditTransactionModal";
@@ -45,12 +46,14 @@ export function CategoryGroup({
   const [selectMode, setSelectMode] = useState<"EDIT" | "DELETE" | null>(null);
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const router = useRouter();
 
   const handleSelectConfirm = async (transactionId: string) => {
     if (selectMode === "DELETE") {
       if (confirm("Ви дійсно хочете видалити цю операцію?")) {
         await onDeleteTransaction(transactionId);
         setSelectMode(null);
+        router.refresh();
       }
     } else if (selectMode === "EDIT") {
       const tx = catTxs.find(t => t.id === transactionId);

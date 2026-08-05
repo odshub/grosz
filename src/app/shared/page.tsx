@@ -10,7 +10,6 @@ import Link from "next/link";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
 type Transaction = {
   id: string;
   amount: number | string;
@@ -45,19 +44,21 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
     .eq("email", session.user.email)
     .single();
 
-  if (user) {
-    const { data: existingMarker } = await supabaseAdmin
-      .from("transactions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("scope", "SHARED")
-      .eq("label", "monthly_rollover_marker_SHARED")
-      .gte("created_at", currentMonthStart)
-      .limit(1);
+  if (!user) {
+    return <MobileAppLayout><div className="p-4 text-center">User not found</div></MobileAppLayout>;
+  }
 
-    if (!existingMarker || existingMarker.length === 0) {
-      await executeRollover("SHARED");
-    }
+  const { data: existingMarker } = await supabaseAdmin
+    .from("transactions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("scope", "SHARED")
+    .eq("label", "monthly_rollover_marker_SHARED")
+    .gte("created_at", currentMonthStart)
+    .limit(1);
+
+  if (!existingMarker || existingMarker.length === 0) {
+    await executeRollover("SHARED");
   }
 
   // Fetch shared transactions for the current month
@@ -80,11 +81,10 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
       transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )
     `);
 
-  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("scope", "SHARED");
+  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("user_id", user.id).eq("scope", "SHARED");
   const categories = categoriesData || [];
 
-  const txs = (transactions || []).filter(t => !t.parent_id && !t.label?.startsWith("monthly_rollover_marker"));
-  const rolloverMarker = (transactions || []).find(t => t.label === "monthly_rollover_marker_SHARED");
+  const txs = (transactions || []).filter(t => !t.parent_id);
   const envs = envelopes || [];
 
   // Calculate overall shared balance
@@ -92,7 +92,10 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
     .filter(t => t.currency === "PLN" && t.is_paid !== false)
     .reduce((acc, t) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
 
-  const groupedTxs = txs.reduce((acc, tx: Transaction) => {
+  const incomes = txs.filter(t => t.type === "INCOME");
+  const expenses = txs.filter(t => t.type === "EXPENSE");
+
+  const groupedExpenses = expenses.reduce((acc, tx: Transaction) => {
     const catName = tx.categories?.name || t('page.no_category');
     if (!acc[catName]) acc[catName] = [];
     acc[catName].push(tx);
@@ -127,38 +130,49 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
                 <CategoriesManager categories={categories} scope="SHARED" />
               </div>
               
-              {rolloverMarker && (
-                <div className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl flex justify-between items-center shadow-sm">
-                  <span className="font-medium text-sm">{t('tx.rollover_balance')}</span>
-                  <span className="font-bold">+{Number(rolloverMarker.amount).toFixed(2)} {rolloverMarker.currency}</span>
-                </div>
-              )}
-
               <div className="space-y-6">
-                {Object.keys(groupedTxs).length === 0 ? (
+                {txs.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
                 ) : (
-                  Object.entries(groupedTxs).map(([catName, catTxsRaw]) => {
-                    const catTxs = catTxsRaw as Transaction[];
-                    const color = catTxs[0]?.categories?.color || "#cccccc";
-                    
-                    const total = catTxs
-                      .filter(t => t.currency === "PLN")
-                      .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
-                    
-                    return (
-                      <CategoryGroup
-                        key={catName}
-                        catName={catName}
-                        catTxs={catTxs}
-                        total={total}
-                        color={color}
+                  <>
+                    {incomes.length > 0 && (
+                      <CategoryGroup 
+                        key="income_category"
+                        catName={t('page.income_category') as string}
+                        catTxs={incomes}
+                        total={incomes
+                          .filter(t => t.currency === "PLN")
+                          .reduce((sum, t) => sum - Number(t.amount), 0)
+                        }
+                        color="#10b981"
                         categories={categories}
                         transactionsRaw={transactions || []}
                         onDeleteTransaction={deleteTransaction}
                       />
-                    );
-                  })
+                    )}
+                    
+                    {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
+                      const catTxs = catTxsRaw as Transaction[];
+                      const color = catTxs[0]?.categories?.color || "#cccccc";
+                      
+                      const total = catTxs
+                        .filter(t => t.currency === "PLN")
+                        .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
+                      
+                      return (
+                        <CategoryGroup
+                          key={catName}
+                          catName={catName}
+                          catTxs={catTxs}
+                          total={total}
+                          color={color}
+                          categories={categories}
+                          transactionsRaw={transactions || []}
+                          onDeleteTransaction={deleteTransaction}
+                        />
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </div>

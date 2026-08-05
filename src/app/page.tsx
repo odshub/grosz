@@ -70,6 +70,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
       categories (name, color)
     `)
     .eq("user_id", user.id)
+    .or("scope.eq.PERSONAL,scope.is.null")
     .is("tag_id", null)
     .gte("created_at", currentMonthStart)
     .order("created_at", { ascending: false });
@@ -81,18 +82,20 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
 
   const envs = envelopes || [];
 
-  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").or("scope.eq.PERSONAL,scope.is.null");
+  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("user_id", user.id).or("scope.eq.PERSONAL,scope.is.null");
   const categories = categoriesData || [];
 
-  const txs = (transactions || []).filter(t => !t.parent_id && !t.label?.startsWith("monthly_rollover_marker"));
-  const rolloverMarker = (transactions || []).find(t => t.label === "monthly_rollover_marker_PERSONAL");
+  const txs = (transactions || []).filter(t => !t.parent_id);
 
   const balance = (transactions || [])
     .filter(t => t.currency === "PLN" && t.is_paid !== false)
     .reduce((acc, t) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
 
-  // Group transactions by category
-  const groupedTxs = txs.reduce((acc, tx: Transaction) => {
+  const incomes = txs.filter(t => t.type === "INCOME");
+  const expenses = txs.filter(t => t.type === "EXPENSE");
+
+  // Group expenses by category
+  const groupedExpenses = expenses.reduce((acc, tx: Transaction) => {
     const catName = tx.categories?.name || t('page.no_category');
     if (!acc[catName]) acc[catName] = [];
     acc[catName].push(tx);
@@ -128,38 +131,49 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                 <CategoriesManager categories={categories} />
               </div>
               
-              {rolloverMarker && (
-                <div className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl flex justify-between items-center shadow-sm">
-                  <span className="font-medium text-sm">{t('tx.rollover_balance')}</span>
-                  <span className="font-bold">+{Number(rolloverMarker.amount).toFixed(2)} {rolloverMarker.currency}</span>
-                </div>
-              )}
-              
               <div className="space-y-8 pb-4">
-                {Object.keys(groupedTxs).length === 0 ? (
+                {txs.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
                 ) : (
-                  Object.entries(groupedTxs).map(([catName, catTxsRaw]) => {
-                    const catTxs = catTxsRaw as Transaction[];
-                    const color = catTxs[0]?.categories?.color || "#cccccc";
-                    
-                    const total = catTxs
-                      .filter(t => t.currency === "PLN")
-                      .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
-                    
-                    return (
-                      <CategoryGroup
-                        key={catName}
-                        catName={catName}
-                        catTxs={catTxs}
-                        total={total}
-                        color={color}
+                  <>
+                    {incomes.length > 0 && (
+                      <CategoryGroup 
+                        key="income_category"
+                        catName={t('page.income_category') as string}
+                        catTxs={incomes}
+                        total={incomes
+                          .filter(t => t.currency === "PLN")
+                          .reduce((sum, t) => sum - Number(t.amount), 0)
+                        }
+                        color="#10b981"
                         categories={categories}
                         transactionsRaw={transactions || []}
                         onDeleteTransaction={deleteTransaction}
                       />
-                    );
-                  })
+                    )}
+                    
+                    {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
+                      const catTxs = catTxsRaw as Transaction[];
+                      const color = catTxs[0]?.categories?.color || "#cccccc";
+                      
+                      const total = catTxs
+                        .filter(t => t.currency === "PLN")
+                        .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
+                      
+                      return (
+                        <CategoryGroup 
+                          key={catName}
+                          catName={catName}
+                          catTxs={catTxs}
+                          total={total}
+                          color={color}
+                          categories={categories}
+                          transactionsRaw={transactions || []}
+                          onDeleteTransaction={deleteTransaction}
+                        />
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { editTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
+import { useRouter } from "next/navigation";
 
 interface Category {
   id: string;
@@ -29,6 +30,7 @@ interface EditTransactionModalProps {
 export function EditTransactionModal({ onClose, categories, transaction }: EditTransactionModalProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   
   // State from transaction
   const [selectedCategory, setSelectedCategory] = useState<string>(transaction.categoryId || (categories[0]?.id || ""));
@@ -41,21 +43,30 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedCategory || !amount) return;
+    if (type === "EXPENSE" && !selectedCategory) return;
+    if (!amount) return;
     setLoading(true);
     const formData = new FormData();
     formData.append("amount", amount);
     formData.append("currency", currency);
     formData.append("type", type);
-    formData.append("categoryId", selectedCategory);
-    formData.append("expenseType", expenseType);
+    
+    if (type === "EXPENSE") {
+      formData.append("categoryId", selectedCategory);
+      formData.append("expenseType", expenseType);
+    } else {
+      formData.append("categoryId", "");
+      formData.append("expenseType", "FIXED");
+    }
+    
     if (label) formData.append("label", label);
-    formData.append("isPaid", transaction.isPaid ? "true" : "false"); // Keep the original value
+    formData.append("isPaid", transaction.isPaid ? "true" : "false");
     formData.append("isShared", isShared ? "true" : "false");
     
     await editTransaction(transaction.id, formData);
     setLoading(false);
     onClose();
+    router.refresh();
   }
 
   return (
@@ -84,19 +95,21 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.expense_type')}</label>
-              <div className="flex gap-2">
-                <label className="flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer has-checked:bg-primary/10 has-checked:border-primary transition-colors">
-                  <input type="radio" name="expenseType" value="FIXED" checked={expenseType === "FIXED"} onChange={() => setExpenseType("FIXED")} className="sr-only" />
-                  <span>{t('modal.edit_tx.fixed')}</span>
-                </label>
-                <label className="flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer has-checked:bg-primary/10 has-checked:border-primary transition-colors">
-                  <input type="radio" name="expenseType" value="FLOATING" checked={expenseType === "FLOATING"} onChange={() => setExpenseType("FLOATING")} className="sr-only" />
-                  <span>{t('modal.edit_tx.floating')}</span>
-                </label>
+            {type === "EXPENSE" && (
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.expense_type')}</label>
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer has-checked:bg-primary/10 has-checked:border-primary transition-colors">
+                    <input type="radio" name="expenseType" value="FIXED" checked={expenseType === "FIXED"} onChange={() => setExpenseType("FIXED")} className="sr-only" />
+                    <span>{t('modal.edit_tx.fixed')}</span>
+                  </label>
+                  <label className="flex-1 flex items-center justify-center p-3 border rounded-lg cursor-pointer has-checked:bg-primary/10 has-checked:border-primary transition-colors">
+                    <input type="radio" name="expenseType" value="FLOATING" checked={expenseType === "FLOATING"} onChange={() => setExpenseType("FLOATING")} className="sr-only" />
+                    <span>{t('modal.edit_tx.floating')}</span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
             
             <div className="flex gap-3">
               <div className="flex-1">
@@ -114,22 +127,24 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
             </div>
 
             {/* Category Section */}
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.category')}</label>
-                <div className="flex flex-col gap-2">
-                  <select 
-                    value={selectedCategory} 
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full p-3 bg-muted rounded-lg outline-none"
-                    required
-                  >
-                    {categories.length === 0 && <option value="">{t('modal.edit_tx.no_categories')}</option>}
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-            </div>
+            {type === "EXPENSE" && (
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.category')}</label>
+                  <div className="flex flex-col gap-2">
+                    <select 
+                      value={selectedCategory} 
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full p-3 bg-muted rounded-lg outline-none"
+                      required
+                    >
+                      {categories.length === 0 && <option value="">{t('modal.edit_tx.no_categories')}</option>}
+                      {categories.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-1">{t('modal.edit_tx.label')}</label>

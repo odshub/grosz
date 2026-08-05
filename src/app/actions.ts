@@ -40,9 +40,9 @@ export async function addTransaction(formData: FormData) {
   const isPaid = explicitIsPaid !== null ? explicitIsPaid === "true" : type === "INCOME";
   const expenseType = (formData.get("expenseType") as string) || "FIXED";
 
-  let finalCategoryId = categoryId;
-  if (!finalCategoryId) {
-    const { data: cat } = await supabaseAdmin.from("categories").select("id").limit(1).single();
+  let finalCategoryId = categoryId || null;
+  if (!finalCategoryId && type !== "INCOME") {
+    const { data: cat } = await supabaseAdmin.from("categories").select("id").eq("user_id", user.id).limit(1).single();
     if (cat) finalCategoryId = cat.id;
   }
 

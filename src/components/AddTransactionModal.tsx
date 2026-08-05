@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
+import { useRouter } from "next/navigation";
 
 interface Category {
   id: string;
@@ -19,6 +20,7 @@ interface AddTransactionModalProps {
 export function AddTransactionModal({ onClose, isSharedPage = false, categories }: AddTransactionModalProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
   
   // Category state
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.id || "");
@@ -36,6 +38,7 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories 
     await addTransaction(formData);
     setLoading(false);
     onClose();
+    router.refresh();
   }
 
   return (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
+import { useRouter } from "next/navigation";
 
 interface IncomeModalProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
   const [loading, setLoading] = useState(false);
   const [isShared, setIsShared] = useState(isSharedPage);
   const { t } = useTranslation();
+  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -21,6 +23,7 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
     await addTransaction(formData);
     setLoading(false);
     onClose();
+    router.refresh();
   }
 
   return (

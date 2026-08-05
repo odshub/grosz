@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addSubTransaction, deleteTransaction } from "@/app/actions";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
+import { useRouter } from "next/navigation";
 
 interface FloatingTransactionModalProps {
   transaction: {
@@ -20,6 +21,7 @@ interface FloatingTransactionModalProps {
 export function FloatingTransactionModal({ transaction, subTransactions, onClose }: FloatingTransactionModalProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
 
   const spent = subTransactions.reduce((acc, tx) => acc + Number(tx.amount), 0);
   const remaining = transaction.amount - spent;
@@ -38,6 +40,7 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
     setLoading(false);
     // don't close, user might want to add multiple
     (document.getElementById('new-purchase-form') as HTMLFormElement)?.reset();
+    router.refresh();
   }
 
   return (
@@ -102,15 +105,18 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-base text-foreground">-{Number(st.amount).toFixed(2)} {currencySymbol}</span>
-                    <form action={async () => {
-                      setLoading(true);
-                      await deleteTransaction(st.id);
-                      setLoading(false);
-                    }}>
-                      <button disabled={loading} type="submit" className="p-2 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors active:scale-95 disabled:opacity-50" title={t('btn.delete') as string}>
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </form>
+                    <button 
+                      onClick={async () => {
+                        if (confirm(t('modal.select_tx.title_delete') as string)) {
+                          await deleteTransaction(st.id);
+                          router.refresh();
+                        }
+                      }}
+                      className="p-1.5 text-muted-foreground hover:text-red-500 rounded-lg hover:bg-muted transition-colors"
+                      title={t('modal.select_tx.btn_delete') as string}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               ))

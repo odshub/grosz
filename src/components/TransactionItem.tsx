@@ -78,16 +78,16 @@ export function TransactionItem({
           <p
             className={cn(
               "font-semibold text-base transition-colors",
-              isPaid && expenseType === "FIXED" ? "text-muted-foreground line-through" : (type === "INCOME" ? "text-green-600 dark:text-green-400" : "text-foreground")
+              isPaid && expenseType === "FIXED" && type === "EXPENSE" ? "text-muted-foreground line-through" : (type === "INCOME" ? "text-green-600 dark:text-green-400" : "text-foreground")
             )}
           >
             {type === "INCOME" ? "+" : ""}{displayAmount.toFixed(2)} {currencySymbol}
           </p>
-          {expenseType === "FLOATING" && <p className="text-[10px] text-muted-foreground font-semibold tracking-wide uppercase mt-0.5">{t('modal.floating.remaining')}</p>}
-          {!isPaid && expenseType === "FIXED" && <p className="text-[10px] text-orange-500 font-semibold tracking-wide uppercase mt-0.5">{t('tx.unpaid')}</p>}
+          {expenseType === "FLOATING" && type === "EXPENSE" && <p className="text-[10px] text-muted-foreground font-semibold tracking-wide uppercase mt-0.5">{t('modal.floating.remaining')}</p>}
+          {!isPaid && expenseType === "FIXED" && type === "EXPENSE" && <p className="text-[10px] text-orange-500 font-semibold tracking-wide uppercase mt-0.5">{t('tx.unpaid')}</p>}
         </div>
         
-        {expenseType === "FIXED" ? (
+        {type === "EXPENSE" && expenseType === "FIXED" && (
           <button
             onClick={handleTogglePaid}
             disabled={isPending}
@@ -106,7 +106,9 @@ export function TransactionItem({
               {isPaid && <Check className="w-4 h-4 stroke-3" />}
             </div>
           </button>
-        ) : (
+        )}
+        
+        {type === "EXPENSE" && expenseType === "FLOATING" && (
           <button
             onClick={() => setIsFloatingOpen(true)}
             className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold rounded-full transition-colors"
