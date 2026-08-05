@@ -139,22 +139,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                   <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
                 ) : (
                   <>
-                    {incomes.length > 0 && (
-                      <CategoryGroup 
-                        key="income_category"
-                        catName={t('page.income_category') as string}
-                        catTxs={incomes}
-                        total={incomes
-                          .filter(t => t.currency === "PLN")
-                          .reduce((sum, t) => sum - Number(t.amount), 0)
-                        }
-                        color="#10b981"
-                        categories={categories}
-                        transactionsRaw={transactions || []}
-                        onDeleteTransaction={deleteTransaction}
-                      />
-                    )}
-                    
+
                     {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
                       const catTxs = catTxsRaw as Transaction[];
                       const color = catTxs[0]?.categories?.color || "#cccccc";
@@ -176,6 +161,22 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                         />
                       );
                     })}
+                    
+                    {incomes.length > 0 && (
+                      <CategoryGroup 
+                        key="income_category"
+                        catName={t('page.income_category') as string}
+                        catTxs={incomes}
+                        total={incomes
+                          .filter(t => t.currency === "PLN")
+                          .reduce((sum, t) => sum - Number(t.amount), 0)
+                        }
+                        color="#10b981"
+                        categories={categories}
+                        transactionsRaw={transactions || []}
+                        onDeleteTransaction={deleteTransaction}
+                      />
+                    )}
                   </>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addTransaction, deleteEnvelope } from "@/app/actions";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
+import { useDialog } from "./DialogProvider";
 
 type Transaction = {
   id: string;
@@ -28,6 +29,7 @@ export function EnvelopeDetailsModal({ envelope, isSharedPage = false, onClose }
   const [view, setView] = useState<"DETAILS" | "TOP_UP" | "WITHDRAW">("DETAILS");
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const { showConfirm } = useDialog();
 
   const envBalance = (envelope.transactions || []).reduce((acc: number, t) => 
     t.is_paid !== false ? (t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount)) : acc
@@ -50,7 +52,7 @@ export function EnvelopeDetailsModal({ envelope, isSharedPage = false, onClose }
   }
 
   async function handleDelete() {
-    if (confirm(t('modal.envelope.delete_confirm') as string)) {
+    if (await showConfirm(t('modal.envelope.delete_confirm') as string)) {
       setLoading(true);
       await deleteEnvelope(envelope.id);
       setLoading(false);

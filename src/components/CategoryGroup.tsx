@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { TransactionItem } from "./TransactionItem";
 import { SelectTransactionModal } from "./SelectTransactionModal";
 import { EditTransactionModal } from "./EditTransactionModal";
+import { useDialog } from "./DialogProvider";
+import { useTranslation } from "@/lib/i18n/client";
 
 // Reusing the type from page.tsx roughly
 type Transaction = {
@@ -48,10 +50,12 @@ export function CategoryGroup({
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [showAll, setShowAll] = useState(false);
   const router = useRouter();
+  const { showConfirm } = useDialog();
+  const { t } = useTranslation();
 
   const handleSelectConfirm = async (transactionId: string) => {
     if (selectMode === "DELETE") {
-      if (confirm("Ви дійсно хочете видалити цю операцію?")) {
+      if (await showConfirm(t('modal.select_tx.title_delete') as string)) {
         await onDeleteTransaction(transactionId);
         setSelectMode(null);
         router.refresh();

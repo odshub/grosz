@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
-import { addCategory, updateCategory } from "@/app/actions";
+import { addCategory, updateCategory, deleteCategory } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
+import { useDialog } from "./DialogProvider";
 
 interface Category {
   id: string;
@@ -26,6 +27,7 @@ export function CategoriesManager({ categories, scope = "PERSONAL" }: Categories
   const [newCatColor, setNewCatColor] = useState("#3b82f6");
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
+  const { showAlert } = useDialog();
 
   function handleAddClick() {
     setIsEditing(true);
@@ -58,6 +60,20 @@ export function CategoriesManager({ categories, scope = "PERSONAL" }: Categories
     setIsEditing(false);
     setEditingCategoryId(null);
     setNewCatName("");
+    setLoading(false);
+  }
+
+  async function handleDeleteCategory() {
+    if (!editingCategoryId) return;
+    setLoading(true);
+    const res = await deleteCategory(editingCategoryId);
+    if (res?.error === 'HAS_TRANSACTIONS') {
+      showAlert(t('cat.delete_error') as string, t('app.title') as string);
+    } else {
+      setIsEditing(false);
+      setEditingCategoryId(null);
+      setNewCatName("");
+    }
     setLoading(false);
   }
 
@@ -135,6 +151,11 @@ export function CategoriesManager({ categories, scope = "PERSONAL" }: Categories
                     <button type="button" disabled={loading} onClick={handleSaveCategory} className="flex-1 p-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm">
                       {loading ? "..." : t('btn.save')}
                     </button>
+                    {editingCategoryId && (
+                      <button type="button" disabled={loading} onClick={handleDeleteCategory} className="flex-1 p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold">
+                        {t('cat.delete')}
+                      </button>
+                    )}
                     <button type="button" onClick={() => setIsEditing(false)} className="flex-1 p-3 bg-muted border border-border rounded-xl text-sm font-bold">
                       {t('btn.cancel')}
                     </button>

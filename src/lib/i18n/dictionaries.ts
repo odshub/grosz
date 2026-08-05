@@ -184,7 +184,9 @@ export const dictionaries = {
     'cat.change': 'Змінити',
     'cat.add': '+ Додати категорію',
     'cat.name_placeholder': 'Назва категорії',
-    'cat.color': 'Колір'
+    'cat.color': 'Колір',
+    'cat.delete': 'Видалити',
+    'cat.delete_error': 'Неможливо видалити категорію. Спочатку видаліть або перенесіть всі транзакції з цієї категорії.'
   },
   ru: {
     // Navigation
@@ -371,7 +373,9 @@ export const dictionaries = {
     'cat.change': 'Изменить',
     'cat.add': '+ Добавить категорию',
     'cat.name_placeholder': 'Название категории',
-    'cat.color': 'Цвет'
+    'cat.color': 'Цвет',
+    'cat.delete': 'Удалить',
+    'cat.delete_error': 'Невозможно удалить категорию. Сначала удалите или перенесите все транзакции из этой категории.'
   }
 };
 

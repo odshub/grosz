@@ -5,6 +5,7 @@ import { addSubTransaction, deleteTransaction } from "@/app/actions";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
+import { useDialog } from "./DialogProvider";
 
 interface FloatingTransactionModalProps {
   transaction: {
@@ -22,6 +23,7 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
+  const { showConfirm } = useDialog();
 
   const spent = subTransactions.reduce((acc, tx) => acc + Number(tx.amount), 0);
   const remaining = transaction.amount - spent;
@@ -107,7 +109,7 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
                     <span className="font-bold text-base text-foreground">-{Number(st.amount).toFixed(2)} {currencySymbol}</span>
                     <button 
                       onClick={async () => {
-                        if (confirm(t('modal.select_tx.title_delete') as string)) {
+                        if (await showConfirm(t('modal.select_tx.title_delete') as string)) {
                           await deleteTransaction(st.id);
                           router.refresh();
                         }

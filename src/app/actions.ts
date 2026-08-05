@@ -165,6 +165,24 @@ export async function updateCategory(id: string, formData: FormData) {
   revalidatePath("/shared");
 }
 
+export async function deleteCategory(id: string) {
+  // Check if there are transactions with this category
+  const { data: txs } = await supabaseAdmin
+    .from("transactions")
+    .select("id")
+    .eq("category_id", id)
+    .limit(1);
+
+  if (txs && txs.length > 0) {
+    return { error: 'HAS_TRANSACTIONS' };
+  }
+
+  await supabaseAdmin.from("categories").delete().eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/shared");
+  return { success: true };
+}
+
 export async function addEnvelope(formData: FormData) {
   const { user } = await getCurrentUser();
   const name = formData.get("name") as string;
