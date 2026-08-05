@@ -86,7 +86,7 @@ export function SplashScreen() {
       `}</style>
 
       <div
-        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${
+        className={`fixed inset-0 z-100 flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${
           fade ? "opacity-0 pointer-events-none" : "opacity-100"
         } bg-animated`}
       >
@@ -124,14 +124,14 @@ export function SplashScreen() {
         </div>
 
         {/* Loading Progress Section */}
-        <div className="absolute bottom-16 flex flex-col items-center w-full max-w-[220px]">
+        <div className="absolute bottom-16 flex flex-col items-center w-full max-w-55">
           <div className="flex justify-between w-full text-[10px] font-bold text-white/60 mb-2.5 uppercase tracking-widest px-1">
             <span>{t('app.loading')}</span>
             <span className="text-[#caaf6b] tabular-nums">{Math.floor(progress)}%</span>
           </div>
           <div className="h-1 w-full bg-black/40 rounded-full overflow-hidden relative shadow-inner">
             <div 
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#8a7238] to-[#caaf6b] rounded-full transition-all duration-75 ease-linear"
+              className="absolute top-0 left-0 h-full bg-linear-to-r from-[#8a7238] to-[#caaf6b] rounded-full transition-all duration-75 ease-linear"
               style={{ width: `${progress}%` }}
             />
           </div>
