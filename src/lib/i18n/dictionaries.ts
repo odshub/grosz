@@ -222,8 +222,8 @@ export const dictionaries = {
     // History
     'history.title': 'История операций',
     'history.empty': 'История пуста для этого месяца.',
-    'history.ops': 'оп.',
-    'history.unnamed': 'Без названия',
+    'history.operations': 'оп.',
+    'history.untitled': 'Без названия',
     'history.shared': 'Общий',
     'history.personal': 'Личный',
     'history.fixed': 'Фикс',
