@@ -127,10 +127,10 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
         {currentTab === 'budget' && (
           <div className="space-y-6">
             {/* Main balance (Excludes Envelopes) */}
-            <div className="relative overflow-hidden rounded-2xl p-6 shadow-xl bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 border border-slate-700/50 text-white">
+            <div className="relative overflow-hidden rounded-2xl p-6 shadow-xl shadow-emerald-900/20 bg-gradient-to-tr from-emerald-950 via-teal-900 to-emerald-900 border border-emerald-700/50 text-white">
               {/* Decorative elements */}
-              <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
               
               <div className="relative z-10 flex flex-col h-full justify-between gap-8">
                 {/* Top Row: Chip and Logo */}
