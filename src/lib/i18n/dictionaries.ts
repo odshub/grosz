@@ -1,0 +1,367 @@
+export const dictionaries = {
+  uk: {
+    // Navigation
+    'nav.personal': 'Мої',
+    'nav.shared': 'Спільні',
+    'nav.history': 'Історія',
+    'nav.notes': 'Нотатки',
+    'app.title': 'Groszyk',
+    'app.subtitle': 'Сімейні фінанси',
+
+    // Shared Header
+    'header.personal_budget': 'Мій бюджет',
+    'header.private_envelopes': 'Приватні конверти',
+    'header.shared_budget': 'Спільний бюджет',
+    'header.shared_envelopes': 'Спільні конверти',
+
+    // Actions & Buttons
+    'btn.logout': 'Вийти',
+    'btn.login_google': 'Увійти через Google',
+    'btn.cancel': 'Скасувати',
+    'btn.delete': 'Видалити',
+    'btn.edit': 'Редагувати',
+    'btn.open': 'Відкрити',
+    'btn.save': 'Зберегти',
+    'btn.add': 'Додати',
+    'btn.create_envelope': 'Створити конверт',
+    
+    // Floating Add
+    'floating_add.what_to_add': 'Що додати?',
+    
+    // Notes
+    'notes.title': 'Нотатки',
+    'notes.description': 'Зберігайте ідеї, списки покупок або нагадування. Додавайте #теги для швидкого пошуку.',
+    'notes.placeholder': 'Напишіть нотатку (використовуйте #теги)...',
+    'notes.empty': 'Нотаток не знайдено',
+    'notes.search_placeholder': 'Пошук нотаток або #тегів...',
+    'notes.unknown_user': 'Невідомий',
+
+    // History
+    'history.title': 'Історія операцій',
+    'history.empty': 'Історія порожня для цього місяця.',
+    'history.operations': 'оп.',
+    'history.shared': 'Спільний',
+    'history.personal': 'Власний',
+    'history.fixed': 'Фікс',
+    'history.floating': 'Плаваючий',
+    'history.untitled': 'Без назви',
+    'history.stats_income': 'Прихід',
+    'history.stats_spent': 'Витрачено',
+    'history.stats_budget': 'Бюджет',
+
+    // Profile
+    'profile.title': 'Профіль',
+    'profile.choose_avatar': 'Оберіть ваш аватар',
+    'profile.appearance': 'Оформлення',
+    'profile.language': 'Мова / Язык',
+    'profile.switch_theme': 'Перемкнути тему',
+    'profile.nickname': 'Псевдонім',
+    'profile.nickname_placeholder': 'Введіть псевдонім',
+    'profile.nickname_save': 'Зберегти',
+    'profile.nickname_saving': 'Збереження...',
+
+    // Modals
+    'modal.income.title': 'Новий дохід',
+    'modal.income.amount': 'Сума',
+    'modal.income.label': 'Назва (джерело доходу)',
+    'modal.income.label_placeholder': 'Напр. Зарплата, Подарунок...',
+    'modal.income.shared_switch': 'Спільний дохід',
+    'modal.income.shared_desc': 'Додати до загального бюджету',
+    'modal.income.saving': 'Збереження...',
+    'modal.income.add_btn': 'Додати дохід',
+
+    'modal.expense.title': 'Нова витрата',
+    'modal.expense.add_tx': 'Нова операція',
+    'modal.expense.expense_type': 'Вид витрати',
+    'modal.expense.category': 'Категорія',
+    'modal.expense.no_categories': 'Немає категорій',
+    'modal.expense.label_placeholder': 'Напр. Світло, Оренда, Кіт...',
+    'modal.expense.label': 'Назва (за що заплачено)',
+    'modal.expense.amount_sum': 'Сума',
+    'modal.expense.saving': 'Збереження...',
+    'modal.expense.add_tx_btn': 'Додати операцію',
+    'modal.expense.type_fixed': 'Фіксована',
+    'modal.expense.type_floating': 'Плаваюча (бюджет)',
+    'modal.expense.shared_expense': 'Спільна витрата',
+    'modal.expense.shared_desc': 'Впливає на загальний баланс',
+    'modal.expense.add_btn': 'Додати витрату',
+
+    'modal.envelope.title': 'Деталі конверта',
+    'modal.envelope.add_title': 'Новий конверт',
+    'modal.envelope.name_label': 'Назва',
+    'modal.envelope.name_placeholder': 'Наприклад: Відпустка 🌴',
+    'modal.envelope.currency_label': 'Валюта',
+    'modal.envelope.creating': 'Створення...',
+    'modal.envelope.create_btn': 'Створити',
+    'modal.envelope.balance': 'Поточний баланс',
+    'modal.envelope.topup': 'Поповнити',
+    'modal.envelope.withdraw': 'Зняти',
+    'modal.envelope.topup_btn': 'Поповнити конверт',
+    'modal.envelope.withdraw_btn': 'Зняти кошти',
+    'modal.envelope.history': 'Історія операцій',
+    'modal.envelope.empty_history': 'Ще немає операцій',
+    'modal.envelope.delete_confirm': 'Дійсно видалити?',
+    'modal.envelope.income': 'Поповнення',
+    'modal.envelope.expense': 'Зняття',
+    'modal.envelope.comment': 'Коментар (необов\'язково)',
+    'modal.envelope.amount_currency': 'Сума',
+    'modal.envelope.topup_placeholder': 'Премія, кешбек...',
+    'modal.envelope.withdraw_placeholder': 'Покупка квитків...',
+    'modal.envelope.saving': 'Збереження...',
+    'envelope.not_topped_up_this_month': 'ℹ️ Цього місяця ще не поповнено',
+
+
+
+    'modal.floating.budget': 'Бюджет',
+    'modal.floating.spent': 'Витрачено',
+    'modal.floating.remaining': 'Залишок',
+    'modal.floating.history': 'Історія витрат',
+    'modal.floating.empty': 'Поки що жодних витрат',
+    'modal.floating.empty_desc': 'Додайте першу покупку нижче',
+    'modal.floating.input_what': 'Що купили?',
+    'modal.floating.input_amount': 'Сума',
+    'modal.floating.add_btn': 'Додати покупку',
+
+    // Edit Transaction Modal
+    'modal.edit_tx.title': 'Редагувати операцію',
+    'modal.edit_tx.type': 'Тип',
+    'modal.edit_tx.expense': 'Витрата',
+    'modal.edit_tx.income': 'Дохід',
+    'modal.edit_tx.expense_type': 'Вид витрати',
+    'modal.edit_tx.fixed': 'Фіксована',
+    'modal.edit_tx.floating': 'Плаваюча (бюджет)',
+    'modal.edit_tx.amount': 'Сума',
+    'modal.edit_tx.budget': 'Бюджет',
+    'modal.edit_tx.currency': 'Валюта',
+    'modal.edit_tx.category': 'Категорія',
+    'modal.edit_tx.no_categories': 'Немає категорій',
+    'modal.edit_tx.label': 'Назва (за що заплачено)',
+    'modal.edit_tx.label_placeholder': 'Напр. Світло, Оренда, Кіт...',
+    'modal.edit_tx.shared': 'Спільна витрата',
+    'modal.edit_tx.shared_desc': 'Впливає на загальний баланс',
+    'modal.edit_tx.saving': 'Збереження...',
+    'modal.edit_tx.save_btn': 'Зберегти зміни',
+    
+    // Select Transaction
+    'modal.select_tx.title_edit': 'Оберіть операцію для редагування',
+    'modal.select_tx.title_delete': 'Оберіть операцію для видалення',
+    'modal.select_tx.btn_edit': 'Редагувати',
+    'modal.select_tx.btn_delete': 'Видалити',
+
+    // Transactions
+    'tx.today': 'Сьогодні',
+    'tx.unpaid': 'Не оплачено',
+    'tx.mark_paid': 'Відмітити як оплачене',
+    'tx.cancel_paid': 'Відмінити оплату',
+    'tx.make_personal': 'Зробити особистим',
+    'tx.make_shared': 'Поділитися',
+    'tx.rollover_balance': 'Залишок з минулого місяця',
+
+    'error.no_categories': 'Немає операцій в цій категорії',
+
+    // Page
+    'page.current_balance': 'Поточний баланс (PLN)',
+    'page.your_transactions': 'Ваші операції в цьому місяці',
+    'page.no_transactions': 'Ще немає операцій',
+    'page.no_category': 'Перенесено з минулого місяця',
+    'page.shared_finances': 'Спільні фінанси',
+    'page.shared_balance': 'Спільний баланс (PLN)',
+    'page.your_transactions_shared': 'Операції в цьому місяці (Спільні)',
+    'page.history': 'Історія операцій',
+    'page.notes': 'Нотатки',
+    'page.notes_desc': 'Зберігайте ідеї, списки покупок або нагадування. Додавайте #теги для швидкого пошуку.',
+
+    // Categories
+    'cat.manage_categories': 'Управління категоріями',
+    'cat.title': 'Категорії',
+    'cat.empty': 'Немає категорій',
+    'cat.change': 'Змінити',
+    'cat.add': '+ Додати категорію',
+    'cat.name_placeholder': 'Назва категорії',
+    'cat.color': 'Колір'
+  },
+  ru: {
+    // Navigation
+    'nav.personal': 'Мои',
+    'nav.shared': 'Общие',
+    'nav.history': 'История',
+    'nav.notes': 'Заметки',
+    'app.title': 'Groszyk',
+    'app.subtitle': 'Семейные финансы',
+
+    // Shared Header
+    'header.personal_budget': 'Мой бюджет',
+    'header.private_envelopes': 'Личные конверты',
+    'header.shared_budget': 'Общий бюджет',
+    'header.shared_envelopes': 'Общие конверты',
+
+    // Actions & Buttons
+    'btn.logout': 'Выйти',
+    'btn.login_google': 'Войти через Google',
+    'btn.cancel': 'Отмена',
+    'btn.delete': 'Удалить',
+    'btn.edit': 'Редактировать',
+    'btn.open': 'Открыть',
+    'btn.save': 'Сохранить',
+    'btn.add': 'Добавить',
+    'btn.create_envelope': 'Создать конверт',
+    
+    // Floating Add
+    'floating_add.what_to_add': 'Что добавить?',
+    
+    // Notes
+    'notes.title': 'Заметки',
+    'notes.description': 'Сохраняйте идеи, списки покупок или напоминания. Добавляйте #теги для быстрого поиска.',
+    'notes.placeholder': 'Напишите заметку (используйте #теги)...',
+    'notes.empty': 'Заметки не найдены',
+    'notes.search_placeholder': 'Поиск заметок или #тегов...',
+    'notes.unknown_user': 'Неизвестен',
+
+    // History
+    'history.title': 'История операций',
+    'history.empty': 'История пуста для этого месяца.',
+    'history.ops': 'оп.',
+    'history.unnamed': 'Без названия',
+    'history.shared': 'Общий',
+    'history.personal': 'Личный',
+    'history.fixed': 'Фикс',
+    'history.floating': 'Плавающий',
+    'history.stats_income': 'Доход',
+    'history.stats_spent': 'Потрачено',
+    'history.stats_budget': 'Бюджет',
+
+    // Profile
+    'profile.title': 'Профиль',
+    'profile.choose_avatar': 'Выберите ваш аватар',
+    'profile.appearance': 'Оформление',
+    'profile.language': 'Язык / Мова',
+    'profile.switch_theme': 'Переключить тему',
+    'profile.nickname': 'Псевдоним',
+    'profile.nickname_placeholder': 'Введите псевдоним',
+    'profile.nickname_save': 'Сохранить',
+    'profile.nickname_saving': 'Сохранение...',
+
+    // Modals
+    'modal.income.title': 'Новый доход',
+    'modal.income.amount': 'Сумма',
+    'modal.income.label': 'Название (источник дохода)',
+    'modal.income.label_placeholder': 'Напр. Зарплата, Подарок...',
+    'modal.income.shared_switch': 'Общий доход',
+    'modal.income.shared_desc': 'Добавить в общий бюджет',
+    'modal.income.saving': 'Сохранение...',
+    'modal.income.add_btn': 'Добавить доход',
+
+    'modal.expense.title': 'Новый расход',
+    'modal.expense.add_tx': 'Новая операция',
+    'modal.expense.expense_type': 'Вид расхода',
+    'modal.expense.category': 'Категория',
+    'modal.expense.no_categories': 'Нет категорий',
+    'modal.expense.label_placeholder': 'Напр. Свет, Аренда, Кот...',
+    'modal.expense.label': 'Название (за что заплачено)',
+    'modal.expense.amount_sum': 'Сумма',
+    'modal.expense.saving': 'Сохранение...',
+    'modal.expense.add_tx_btn': 'Добавить операцию',
+    'modal.expense.type_fixed': 'Фиксованная',
+    'modal.expense.type_floating': 'Плавающая (бюджет)',
+    'modal.expense.shared_expense': 'Общий расход',
+    'modal.expense.shared_desc': 'Влияет на общий баланс',
+    'modal.expense.add_btn': 'Добавить расход',
+
+    'modal.envelope.title': 'Детали конверта',
+    'modal.envelope.add_title': 'Новый конверт',
+    'modal.envelope.name_label': 'Название',
+    'modal.envelope.name_placeholder': 'Например: Отпуск 🌴',
+    'modal.envelope.currency_label': 'Валюта',
+    'modal.envelope.creating': 'Создание...',
+    'modal.envelope.create_btn': 'Создать',
+    'modal.envelope.balance': 'Текущий баланс',
+    'modal.envelope.topup': 'Пополнить',
+    'modal.envelope.withdraw': 'Снять',
+    'modal.envelope.topup_btn': 'Пополнить конверт',
+    'modal.envelope.withdraw_btn': 'Снять средства',
+    'modal.envelope.history': 'История операций',
+    'modal.envelope.empty_history': 'Пока нет операций',
+    'modal.envelope.delete_confirm': 'Действительно удалить?',
+    'modal.envelope.income': 'Пополнение',
+    'modal.envelope.expense': 'Снятие',
+    'modal.envelope.comment': 'Комментарий (необязательно)',
+    'modal.envelope.amount_currency': 'Сумма',
+    'modal.envelope.topup_placeholder': 'Премия, кэшбек...',
+    'modal.envelope.withdraw_placeholder': 'Покупка билетов...',
+    'modal.envelope.saving': 'Сохранение...',
+    'envelope.not_topped_up_this_month': 'ℹ️ В этом месяце еще не пополнен',
+
+
+
+    'modal.floating.budget': 'Бюджет',
+    'modal.floating.spent': 'Потрачено',
+    'modal.floating.remaining': 'Остаток',
+    'modal.floating.history': 'История трат',
+    'modal.floating.empty': 'Пока нет расходов',
+    'modal.floating.empty_desc': 'Добавьте первую покупку ниже',
+    'modal.floating.input_what': 'Что купили?',
+    'modal.floating.input_amount': 'Сумма',
+    'modal.floating.add_btn': 'Добавить покупку',
+
+    // Edit Transaction Modal
+    'modal.edit_tx.title': 'Редактировать операцию',
+    'modal.edit_tx.type': 'Тип',
+    'modal.edit_tx.expense': 'Расход',
+    'modal.edit_tx.income': 'Доход',
+    'modal.edit_tx.expense_type': 'Вид расхода',
+    'modal.edit_tx.fixed': 'Фиксированная',
+    'modal.edit_tx.floating': 'Плавающая (бюджет)',
+    'modal.edit_tx.amount': 'Сумма',
+    'modal.edit_tx.budget': 'Бюджет',
+    'modal.edit_tx.currency': 'Валюта',
+    'modal.edit_tx.category': 'Категория',
+    'modal.edit_tx.no_categories': 'Нет категорий',
+    'modal.edit_tx.label': 'Название (за что заплачено)',
+    'modal.edit_tx.label_placeholder': 'Напр. Свет, Аренда, Кот...',
+    'modal.edit_tx.shared': 'Общий расход',
+    'modal.edit_tx.shared_desc': 'Влияет на общий баланс',
+    'modal.edit_tx.saving': 'Сохранение...',
+    'modal.edit_tx.save_btn': 'Сохранить изменения',
+
+    // Select Transaction
+    'modal.select_tx.title_edit': 'Выберите операцию для редактирования',
+    'modal.select_tx.title_delete': 'Выберите операцию для удаления',
+    'modal.select_tx.btn_edit': 'Редактировать',
+    'modal.select_tx.btn_delete': 'Удалить',
+
+    // Transactions
+    'tx.today': 'Сегодня',
+    'tx.unpaid': 'Не оплачено',
+    'tx.mark_paid': 'Отметить как оплаченное',
+    'tx.cancel_paid': 'Отменить оплату',
+    'tx.make_personal': 'Сделать личным',
+    'tx.make_shared': 'Поделиться',
+    'tx.rollover_balance': 'Остаток с прошлого месяца',
+
+    'error.no_categories': 'Нет операций в этой категории',
+
+    // Page
+    'page.current_balance': 'Текущий баланс (PLN)',
+    'page.your_transactions': 'Ваши операции в этом месяце',
+    'page.no_transactions': 'Пока нет операций',
+    'page.no_category': 'Перенесено с прошлого месяца',
+    'page.shared_finances': 'Общие финансы',
+    'page.shared_balance': 'Общий баланс (PLN)',
+    'page.your_transactions_shared': 'Операции в этом месяце (Общие)',
+    'page.history': 'История операций',
+    'page.notes': 'Заметки',
+    'page.notes_desc': 'Сохраняйте идеи, списки покупок или напоминания. Добавляйте #теги для быстрого поиска.',
+
+    // Categories
+    'cat.manage_categories': 'Управление категориями',
+    'cat.title': 'Категории',
+    'cat.empty': 'Нет категорий',
+    'cat.change': 'Изменить',
+    'cat.add': '+ Добавить категорию',
+    'cat.name_placeholder': 'Название категории',
+    'cat.color': 'Цвет'
+  }
+};
+
+export type Locale = keyof typeof dictionaries;
+export type DictionaryKey = keyof typeof dictionaries.uk;

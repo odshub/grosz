@@ -1,0 +1,16 @@
+{
+  "name": "Mój Groszyk",
+  "short_name": "Groszyk",
+  "description": "Family finance tracking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}
