@@ -23,6 +23,7 @@ interface EditTransactionModalProps {
     label: string | null;
     isPaid: boolean;
     isShared: boolean;
+    isRecurring: boolean;
     expenseType?: "FIXED" | "FLOATING";
   };
 }
@@ -39,7 +40,8 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
   const [amount, setAmount] = useState<string>(transaction.amount.toString());
   const [currency, setCurrency] = useState<"PLN" | "USD" | "EUR">(transaction.currency);
   const [label, setLabel] = useState<string>(transaction.label || "");
-  const [isShared, setIsShared] = useState(transaction.isShared);
+  const [isRecurring, setIsRecurring] = useState<boolean>(transaction.isRecurring || false);
+  const isShared = transaction.isShared;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,6 +62,7 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
     }
     
     if (label) formData.append("label", label);
+    formData.append("isRecurring", isRecurring ? "true" : "false");
     formData.append("isPaid", transaction.isPaid ? "true" : "false");
     formData.append("isShared", isShared ? "true" : "false");
     
@@ -151,18 +154,22 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
               <input type="text" name="label" required value={label} onChange={e => setLabel(e.target.value)} className="w-full p-3 bg-muted rounded-lg outline-none" placeholder={t('modal.edit_tx.label_placeholder') as string} maxLength={30} />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsShared(!isShared)}>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{t('modal.edit_tx.shared')}</span>
-                  <span className="text-xs text-muted-foreground">{t('modal.edit_tx.shared_desc')}</span>
+            {type === "EXPENSE" && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsRecurring(!isRecurring)}>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{t('modal.edit_tx.recurring')}</span>
+                    <span className="text-xs text-muted-foreground">{t('modal.edit_tx.recurring_desc')}</span>
+                  </div>
+                  <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isRecurring ? "bg-primary" : "bg-border/60"}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isRecurring ? "translate-x-6" : "translate-x-0"}`} />
+                  </div>
+                  <input type="hidden" name="isRecurring" value={isRecurring ? "true" : "false"} />
                 </div>
-                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isShared ? "bg-primary" : "bg-border/60"}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isShared ? "translate-x-6" : "translate-x-0"}`} />
-                </div>
-                <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
               </div>
-            </div>
+            )}
+
+            <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
 
             <button disabled={loading} type="submit" className="w-full p-4 bg-primary text-primary-foreground font-bold rounded-xl mt-6 shadow-sm hover:bg-primary/90 transition-colors">
               {loading ? t('modal.edit_tx.saving') : t('modal.edit_tx.save_btn')}

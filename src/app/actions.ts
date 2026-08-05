@@ -39,6 +39,7 @@ export async function addTransaction(formData: FormData) {
   const explicitIsPaid = formData.get("isPaid");
   const isPaid = explicitIsPaid !== null ? explicitIsPaid === "true" : type === "INCOME";
   const expenseType = (formData.get("expenseType") as string) || "FIXED";
+  const isRecurring = formData.get("isRecurring") === "true";
 
   let finalCategoryId = categoryId || null;
   if (!finalCategoryId && type !== "INCOME") {
@@ -57,6 +58,7 @@ export async function addTransaction(formData: FormData) {
     label,
     is_paid: isPaid,
     expense_type: expenseType,
+    is_recurring: isRecurring,
   });
   if (error) {
     console.error("Error adding transaction:", error);
@@ -83,6 +85,7 @@ export async function editTransaction(id: string, formData: FormData) {
   const label = (formData.get("label") as string) || null;
   const isPaid = formData.get("isPaid") === "true";
   const isShared = formData.get("isShared") === "true";
+  const isRecurring = formData.get("isRecurring") === "true";
 
   await supabaseAdmin.from("transactions").update({
     amount,
@@ -92,6 +95,7 @@ export async function editTransaction(id: string, formData: FormData) {
     label,
     is_paid: isPaid,
     scope: isShared ? "SHARED" : "PERSONAL",
+    is_recurring: isRecurring,
   }).eq("id", id);
 
   revalidatePath("/");
@@ -211,13 +215,18 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
   // 1. Check if rollover is already done for this month
-  const { data: existingMarkers } = await supabaseAdmin
+  let markersQuery = supabaseAdmin
     .from("transactions")
     .select("id")
-    .eq("user_id", user.id)
     .eq("scope", scope)
     .eq("label", `monthly_rollover_marker_${scope}`)
     .gte("created_at", currentMonthStart);
+
+  if (scope === "PERSONAL") {
+    markersQuery = markersQuery.eq("user_id", user.id);
+  }
+
+  const { data: existingMarkers } = await markersQuery;
 
   if (existingMarkers && existingMarkers.length > 0) {
     if (existingMarkers.length > 1) {
@@ -229,13 +238,18 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
   }
 
   // 2. Calculate balance of the previous month
-  const { data: prevTransactions } = await supabaseAdmin
+  let prevQuery = supabaseAdmin
     .from("transactions")
     .select("*")
-    .eq("user_id", user.id)
     .eq("scope", scope)
     .gte("created_at", prevMonthStart)
     .lt("created_at", currentMonthStart);
+
+  if (scope === "PERSONAL") {
+    prevQuery = prevQuery.eq("user_id", user.id);
+  }
+
+  const { data: prevTransactions } = await prevQuery;
 
   let prevBalance = 0;
   if (prevTransactions) {
@@ -256,7 +270,7 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
       t.type === "EXPENSE" && 
       t.parent_id === null &&
       !t.label?.startsWith("monthly_rollover_marker") &&
-      !t.is_paid // "переносимо всі бюджети зі статусом неоплачено"
+      (!t.is_paid || t.is_recurring) // Unpaid budgets OR recurring transactions
     );
 
     for (const t of templatesToCopy) {
@@ -271,6 +285,7 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
         label: t.label,
         is_paid: false,
         expense_type: t.expense_type,
+        is_recurring: t.is_recurring,
         created_at: new Date(now.getFullYear(), now.getMonth(), 1, 12, 5, 0).toISOString()
       });
     }

@@ -51,14 +51,14 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
   const { data: existingMarker } = await supabaseAdmin
     .from("transactions")
     .select("id")
-    .eq("user_id", user.id)
     .eq("scope", "SHARED")
     .eq("label", "monthly_rollover_marker_SHARED")
-    .gte("created_at", currentMonthStart)
-    .limit(1);
+    .gte("created_at", currentMonthStart);
 
   if (!existingMarker || existingMarker.length === 0) {
     await executeRollover("SHARED");
+  } else if (existingMarker.length > 1) {
+    await executeRollover("SHARED"); // Triggers duplicate cleanup
   }
 
   // Fetch shared transactions for the current month
@@ -79,7 +79,8 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
     .select(`
       *,
       transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )
-    `);
+    `)
+    .eq("scope", "SHARED");
 
   const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("user_id", user.id).eq("scope", "SHARED");
   const categories = categoriesData || [];

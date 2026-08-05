@@ -85,6 +85,8 @@ export const dictionaries = {
     'modal.expense.type_floating': 'Плаваюча (бюджет)',
     'modal.expense.shared_expense': 'Спільна витрата',
     'modal.expense.shared_desc': 'Впливає на загальний баланс',
+    'modal.expense.recurring': 'Дублювати щомісяця',
+    'modal.expense.recurring_desc': 'Переносити як неоплачене у новий місяць',
     'modal.expense.add_btn': 'Додати витрату',
 
     'modal.envelope.title': 'Деталі конверта',
@@ -140,6 +142,8 @@ export const dictionaries = {
     'modal.edit_tx.label_placeholder': 'Напр. Світло, Оренда, Кіт...',
     'modal.edit_tx.shared': 'Спільна витрата',
     'modal.edit_tx.shared_desc': 'Впливає на загальний баланс',
+    'modal.edit_tx.recurring': 'Дублювати щомісяця',
+    'modal.edit_tx.recurring_desc': 'Переносити як неоплачене у новий місяць',
     'modal.edit_tx.saving': 'Збереження...',
     'modal.edit_tx.save_btn': 'Зберегти зміни',
     
@@ -268,6 +272,8 @@ export const dictionaries = {
     'modal.expense.type_floating': 'Плавающая (бюджет)',
     'modal.expense.shared_expense': 'Общий расход',
     'modal.expense.shared_desc': 'Влияет на общий баланс',
+    'modal.expense.recurring': 'Дублировать ежемесячно',
+    'modal.expense.recurring_desc': 'Переносить как неоплаченное в новый месяц',
     'modal.expense.add_btn': 'Добавить расход',
 
     'modal.envelope.title': 'Детали конверта',
@@ -323,6 +329,8 @@ export const dictionaries = {
     'modal.edit_tx.label_placeholder': 'Напр. Свет, Аренда, Кот...',
     'modal.edit_tx.shared': 'Общий расход',
     'modal.edit_tx.shared_desc': 'Влияет на общий баланс',
+    'modal.edit_tx.recurring': 'Дублировать ежемесячно',
+    'modal.edit_tx.recurring_desc': 'Переносить как неоплаченное в новый месяц',
     'modal.edit_tx.saving': 'Сохранение...',
     'modal.edit_tx.save_btn': 'Сохранить изменения',
 

@@ -55,10 +55,11 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
     .eq("user_id", user.id)
     .eq("scope", "PERSONAL")
     .eq("label", "monthly_rollover_marker_PERSONAL")
-    .gte("created_at", currentMonthStart)
-    .limit(1);
+    .gte("created_at", currentMonthStart);
 
   if (!existingMarker || existingMarker.length === 0) {
+    await executeRollover("PERSONAL");
+  } else if (existingMarker.length > 1) {
     await executeRollover("PERSONAL");
   }
 
@@ -78,7 +79,9 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   // Fetch envelopes (tags)
   const { data: envelopes } = await supabaseAdmin
     .from("tags")
-    .select(`*, transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )`);
+    .select(`*, transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )`)
+    .eq("user_id", user.id)
+    .or("scope.eq.PERSONAL,scope.is.null");
 
   const envs = envelopes || [];
 

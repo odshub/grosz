@@ -12,7 +12,7 @@ interface IncomeModalProps {
 
 export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps) {
   const [loading, setLoading] = useState(false);
-  const [isShared, setIsShared] = useState(isSharedPage);
+  const isShared = isSharedPage;
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -48,18 +48,7 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
               <input type="text" name="label" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder={t('modal.income.label_placeholder') as string} maxLength={30} />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsShared(!isShared)}>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{t('modal.income.shared_switch')}</span>
-                  <span className="text-xs text-muted-foreground">{t('modal.income.shared_desc')}</span>
-                </div>
-                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isShared ? "bg-green-500" : "bg-border/60"}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isShared ? "translate-x-6" : "translate-x-0"}`} />
-                </div>
-                <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
-              </div>
-            </div>
+            <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
 
             <button disabled={loading} type="submit" className="w-full p-4 bg-green-500 text-white font-bold rounded-xl mt-6 shadow-sm hover:bg-green-600 transition-colors">
               {loading ? t('modal.income.saving') : t('modal.income.add_btn')}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Share2, Lock, Check } from "lucide-react";
+import { Share2, Lock, Check, Repeat } from "lucide-react";
 import { toggleTransactionPaid } from "@/app/actions";
 import { cn } from "./Navigation";
 import { FloatingTransactionModal } from "@/components/FloatingTransactionModal";
@@ -18,6 +18,7 @@ interface TransactionItemProps {
   isShared: boolean;
   label?: string | null;
   isPaid?: boolean;
+  isRecurring?: boolean;
   expenseType?: "FIXED" | "FLOATING";
   subTransactions?: { id: string; amount: number; label: string | null; created_at?: string; currency: string; users?: { email: string, name?: string | null } | null }[];
   onToggleShare?: (id: string) => void;
@@ -33,6 +34,7 @@ export function TransactionItem({
   isShared,
   label,
   isPaid = false,
+  isRecurring = false,
   expenseType = "FIXED",
   subTransactions = [],
   onToggleShare,
@@ -67,8 +69,9 @@ export function TransactionItem({
     )}>
       <div className="flex items-center gap-4">
         <div>
-          <p className="font-medium text-base">
+          <p className="font-medium text-base flex items-center gap-1.5">
             {displayLabel}
+            {isRecurring && <Repeat className="w-3.5 h-3.5 text-muted-foreground" />}
           </p>
           <p className="text-xs text-muted-foreground">{t('tx.today')}</p>
         </div>

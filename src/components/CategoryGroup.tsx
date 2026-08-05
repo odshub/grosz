@@ -21,6 +21,7 @@ type Transaction = {
   parent_id?: string | null;
   scope: string;
   created_at?: string;
+  is_recurring?: boolean;
   users?: { email: string, name?: string | null } | null;
 };
 
@@ -105,6 +106,7 @@ export function CategoryGroup({
             isShared={tx.scope === "SHARED"}
             label={tx.label}
             isPaid={tx.is_paid ?? false}
+            isRecurring={tx.is_recurring ?? false}
             expenseType={tx.expense_type}
             subTransactions={
               transactionsRaw
@@ -142,6 +144,7 @@ export function CategoryGroup({
             type: t.type,
             label: t.label,
             isPaid: t.is_paid,
+            isRecurring: t.is_recurring,
             expenseType: t.expense_type
           }))}
           onClose={() => setSelectMode(null)}
@@ -160,6 +163,7 @@ export function CategoryGroup({
             categoryId: transactionToEdit.category_id,
             isPaid: transactionToEdit.is_paid ?? false,
             isShared: transactionToEdit.scope === "SHARED",
+            isRecurring: transactionToEdit.is_recurring ?? false,
             expenseType: transactionToEdit.expense_type
           }}
           categories={categories}

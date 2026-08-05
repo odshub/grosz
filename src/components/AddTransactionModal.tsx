@@ -28,7 +28,8 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories 
   const [expenseType, setExpenseType] = useState<"FIXED" | "FLOATING">("FIXED");
   
   // Toggles
-  const [isShared, setIsShared] = useState(isSharedPage);
+  const isShared = isSharedPage;
+  const [isRecurring, setIsRecurring] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     if (!selectedCategory) return;
@@ -98,18 +99,19 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories 
             </div>
 
             <div className="space-y-2 pt-2">
-
-              <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsShared(!isShared)}>
+              <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsRecurring(!isRecurring)}>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium">{t('modal.expense.shared_expense')}</span>
-                  <span className="text-xs text-muted-foreground">{t('modal.expense.shared_desc')}</span>
+                  <span className="text-sm font-medium">{t('modal.expense.recurring')}</span>
+                  <span className="text-xs text-muted-foreground">{t('modal.expense.recurring_desc')}</span>
                 </div>
-                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isShared ? "bg-primary" : "bg-border/60"}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isShared ? "translate-x-6" : "translate-x-0"}`} />
+                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isRecurring ? "bg-primary" : "bg-border/60"}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isRecurring ? "translate-x-6" : "translate-x-0"}`} />
                 </div>
-                <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
+                <input type="hidden" name="isRecurring" value={isRecurring ? "true" : "false"} />
               </div>
             </div>
+
+            <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
 
             <button disabled={loading} type="submit" className="w-full p-4 bg-primary text-primary-foreground font-bold rounded-xl mt-6 shadow-sm hover:bg-primary/90 transition-colors">
               {loading ? t('modal.expense.saving') : t('modal.expense.add_tx_btn')}

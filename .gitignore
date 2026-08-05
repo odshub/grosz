@@ -48,3 +48,4 @@ add_user_name.sql
 skills-lock.json
 AGENTS.md
 .gitignore
+add_recurring_column.sql
