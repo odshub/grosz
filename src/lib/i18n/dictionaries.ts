@@ -20,6 +20,8 @@ export const dictionaries = {
     'btn.login_google': 'Увійти через Google',
     'btn.cancel': 'Скасувати',
     'btn.delete': 'Видалити',
+    'btn.select_all': 'Вибрати всі',
+    'btn.deselect_all': 'Зняти виділення',
     'btn.edit': 'Редагувати',
     'btn.open': 'Відкрити',
     'btn.save': 'Зберегти',
@@ -88,6 +90,7 @@ export const dictionaries = {
     'modal.expense.recurring': 'Дублювати щомісяця',
     'modal.expense.recurring_desc': 'Переносити як неоплачене у новий місяць',
     'modal.expense.add_btn': 'Додати витрату',
+    'modal.expense.operation_date': 'Дата операції (необов\'язково)',
 
     'modal.envelope.title': 'Деталі конверта',
     'modal.envelope.add_title': 'Новий конверт',
@@ -155,6 +158,7 @@ export const dictionaries = {
 
     // Transactions
     'tx.today': 'Сьогодні',
+    'tx.this_month': 'Цього місяця',
     'tx.unpaid': 'Не оплачено',
     'tx.mark_paid': 'Відмітити як оплачене',
     'tx.cancel_paid': 'Відмінити оплату',
@@ -163,6 +167,9 @@ export const dictionaries = {
     'tx.rollover_balance': 'Залишок з минулого місяця',
 
     'error.no_categories': 'Немає операцій в цій категорії',
+    'cat.show_completed': 'Показати виконані ({{count}})',
+    'cat.hide_completed': 'Сховати виконані',
+    'cat.show_all_completed': 'Показати всі операції ({{count}})',
 
     // Page
     'page.current_balance': 'Поточний баланс (PLN)',
@@ -210,6 +217,8 @@ export const dictionaries = {
     'btn.login_google': 'Войти через Google',
     'btn.cancel': 'Отмена',
     'btn.delete': 'Удалить',
+    'btn.select_all': 'Выбрать все',
+    'btn.deselect_all': 'Снять выделение',
     'btn.edit': 'Редактировать',
     'btn.open': 'Открыть',
     'btn.save': 'Сохранить',
@@ -278,6 +287,7 @@ export const dictionaries = {
     'modal.expense.recurring': 'Дублировать ежемесячно',
     'modal.expense.recurring_desc': 'Переносить как неоплаченное в новый месяц',
     'modal.expense.add_btn': 'Добавить расход',
+    'modal.expense.operation_date': 'Дата операции (необязательно)',
 
     'modal.envelope.title': 'Детали конверта',
     'modal.envelope.add_title': 'Новый конверт',
@@ -345,6 +355,7 @@ export const dictionaries = {
 
     // Transactions
     'tx.today': 'Сегодня',
+    'tx.this_month': 'В этом месяце',
     'tx.unpaid': 'Не оплачено',
     'tx.mark_paid': 'Отметить как оплаченное',
     'tx.cancel_paid': 'Отменить оплату',
@@ -353,6 +364,9 @@ export const dictionaries = {
     'tx.rollover_balance': 'Остаток с прошлого месяца',
 
     'error.no_categories': 'Нет операций в этой категории',
+    'cat.show_completed': 'Показать выполненные ({{count}})',
+    'cat.hide_completed': 'Скрыть выполненные',
+    'cat.show_all_completed': 'Показать все операции ({{count}})',
 
     // Page
     'page.current_balance': 'Текущий баланс (PLN)',

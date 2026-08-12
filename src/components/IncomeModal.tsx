@@ -48,6 +48,11 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
               <input type="text" name="label" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder={t('modal.income.label_placeholder') as string} maxLength={30} />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('modal.expense.operation_date')}</label>
+              <input type="date" name="operationDate" className="w-full p-3 bg-muted rounded-lg outline-none dark:scheme-dark" />
+            </div>
+
             <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />
 
             <button disabled={loading} type="submit" className="w-full p-4 bg-green-500 text-white font-bold rounded-xl mt-6 shadow-sm hover:bg-green-600 transition-colors">

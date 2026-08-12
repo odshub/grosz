@@ -49,3 +49,6 @@ skills-lock.json
 AGENTS.md
 .gitignore
 add_recurring_column.sql
+add_is_monthly_contribution_to_tags.sql
+add_is_variable_amount.sql
+add_operation_date.sql

@@ -5,7 +5,7 @@ import { CategoriesManager } from "@/components/CategoriesManager";
 import { FloatingAddButton } from "@/components/FloatingAddButton";
 import { EnvelopesList } from "@/components/EnvelopesList";
 import { supabaseAdmin } from "@/lib/supabase";
-import { deleteTransaction, executeRollover } from "@/app/actions";
+import { deleteTransaction, deleteTransactions, executeRollover } from "@/app/actions";
 import Link from "next/link";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
@@ -22,6 +22,7 @@ type Transaction = {
   expense_type?: "FIXED" | "FLOATING";
   parent_id?: string | null;
   scope: string;
+  operation_date?: string | null;
 };
 
 export default async function SharedFinances(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -61,32 +62,39 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
     await executeRollover("SHARED"); // Triggers duplicate cleanup
   }
 
-  // Fetch shared transactions for the current month
-  const { data: transactions } = await supabaseAdmin
-    .from("transactions")
-    .select(`
-      *,
-      categories (name, color)
-    `)
-    .eq("scope", "SHARED")
-    .is("tag_id", null)
-    .gte("created_at", currentMonthStart)
-    .order("created_at", { ascending: false });
-
-  // Fetch envelopes (tags) and their specific transactions
-  const { data: envelopes } = await supabaseAdmin
-    .from("tags")
-    .select(`
-      *,
-      transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )
-    `)
-    .eq("scope", "SHARED");
-
-  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("user_id", user.id).eq("scope", "SHARED");
-  const categories = categoriesData || [];
+  // Parallelize the data fetching
+  const [
+    { data: transactions },
+    { data: envelopes },
+    { data: categoriesData }
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("transactions")
+      .select(`
+        *,
+        categories (name, color)
+      `)
+      .eq("scope", "SHARED")
+      .is("tag_id", null)
+      .gte("created_at", currentMonthStart)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("tags")
+      .select(`
+        *,
+        transactions ( id, amount, type, is_paid, created_at, operation_date, label, users ( email, name ) )
+      `)
+      .eq("scope", "SHARED"),
+    supabaseAdmin
+      .from("categories")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("scope", "SHARED")
+  ]);
 
   const txs = (transactions || []).filter(t => !t.parent_id);
   const envs = envelopes || [];
+  const categories = categoriesData || [];
 
   // Calculate overall shared balance
   const sharedBalance = (transactions || [])
@@ -155,6 +163,7 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
                           categories={categories}
                           transactionsRaw={transactions || []}
                           onDeleteTransaction={deleteTransaction}
+                          onDeleteTransactions={deleteTransactions}
                         />
                       );
                     })}
@@ -172,6 +181,7 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
                         categories={categories}
                         transactionsRaw={transactions || []}
                         onDeleteTransaction={deleteTransaction}
+                        onDeleteTransactions={deleteTransactions}
                       />
                     )}
                   </>

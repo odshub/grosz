@@ -16,9 +16,10 @@ interface SelectTransactionModalProps {
     label?: string | null;
     isPaid?: boolean;
     expenseType?: "FIXED" | "FLOATING";
+    operationDate?: string | null;
   }[];
   onClose: () => void;
-  onConfirm: (transactionId: string) => void;
+  onConfirm: (transactionId: string | string[]) => void;
 }
 
 export function SelectTransactionModal({
@@ -29,6 +30,7 @@ export function SelectTransactionModal({
   onConfirm,
 }: SelectTransactionModalProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { t } = useTranslation();
 
   const title = mode === "EDIT" ? t('modal.select_tx.title_edit') : t('modal.select_tx.title_delete');
@@ -45,18 +47,34 @@ export function SelectTransactionModal({
         </div>
         
         <div className="p-4 overflow-y-auto flex-1 space-y-2">
+          {mode === "DELETE" && transactions.length > 0 && (
+            <div className="flex justify-end mb-2">
+              <button 
+                onClick={() => setSelectedIds(selectedIds.length === transactions.length ? [] : transactions.map(t => t.id))}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                {selectedIds.length === transactions.length ? t('btn.deselect_all') : t('btn.select_all')}
+              </button>
+            </div>
+          )}
           {transactions.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">{t('error.no_categories')}</p>
           ) : (
             transactions.map(tx => {
               const displayLabel = tx.label?.startsWith('monthly_rollover_marker') ? t('tx.rollover_balance') : (tx.label || categoryName);
               const currencySymbol = { PLN: "zł", USD: "$", EUR: "€" }[tx.currency] || tx.currency;
-              const isSelected = selectedId === tx.id;
+              const isSelected = mode === "EDIT" ? selectedId === tx.id : selectedIds.includes(tx.id);
               
               return (
                 <div 
                   key={tx.id}
-                  onClick={() => setSelectedId(tx.id)}
+                  onClick={() => {
+                    if (mode === "EDIT") {
+                      setSelectedId(tx.id);
+                    } else {
+                      setSelectedIds(prev => prev.includes(tx.id) ? prev.filter(id => id !== tx.id) : [...prev, tx.id]);
+                    }
+                  }}
                   className={cn(
                     "flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all",
                     isSelected 
@@ -100,8 +118,11 @@ export function SelectTransactionModal({
             {t('btn.cancel')}
           </button>
           <button
-            onClick={() => selectedId && onConfirm(selectedId)}
-            disabled={!selectedId}
+            onClick={() => {
+              if (mode === "EDIT" && selectedId) onConfirm(selectedId);
+              if (mode === "DELETE" && selectedIds.length > 0) onConfirm(selectedIds);
+            }}
+            disabled={mode === "EDIT" ? !selectedId : selectedIds.length === 0}
             className={cn(
               "flex-1 p-3 rounded-lg font-bold text-white transition-colors disabled:opacity-50",
               mode === "EDIT" ? "bg-primary hover:bg-primary/90" : "bg-red-500 hover:bg-red-600"

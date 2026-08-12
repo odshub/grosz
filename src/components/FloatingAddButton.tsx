@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, TrendingDown, TrendingUp, Pin, PieChart } from "lucide-react";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { IncomeModal } from "./IncomeModal";
 import { AddEnvelopeModal } from "./AddEnvelopeModal";
@@ -15,8 +15,19 @@ interface FloatingAddButtonProps {
 
 export function FloatingAddButton({ isSharedPage = false, currentTab = "personal", categories = [] }: FloatingAddButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalType, setModalType] = useState<"TRANSACTION" | "INCOME" | "ENVELOPE" | null>(null);
+  const [modalType, setModalType] = useState<"SELECT_EXPENSE_TYPE" | "TRANSACTION" | "INCOME" | "ENVELOPE" | null>(null);
+  const [expenseType, setExpenseType] = useState<"FIXED" | "FLOATING">("FIXED");
   const { t } = useTranslation();
+
+  // Prevent background scrolling when any modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   if (!isOpen) {
     return (
@@ -36,30 +47,76 @@ export function FloatingAddButton({ isSharedPage = false, currentTab = "personal
     );
   }
 
-  if (!modalType) {
+  if (!modalType || modalType === "SELECT_EXPENSE_TYPE") {
     return (
       <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/50 sm:items-center">
-        <div className="w-full max-w-sm p-6 bg-background rounded-t-2xl sm:rounded-xl shadow-xl flex flex-col gap-4">
-          <h2 className="text-xl font-bold">{t('floating_add.what_to_add')}</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => setModalType("TRANSACTION")}
-              className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform aspect-square"
-            >
-              <span className="text-2xl">💸</span>
-              <span className="text-sm">{t('modal.expense.title')}</span>
-            </button>
-            <button 
-              onClick={() => setModalType("INCOME")}
-              className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 text-green-600 dark:text-green-500 active:scale-95 transition-transform aspect-square"
-            >
-              <span className="text-2xl">💰</span>
-              <span className="text-sm">{t('modal.income.add_btn')}</span>
-            </button>
+        <div className="w-full max-w-sm p-6 bg-background rounded-t-2xl sm:rounded-xl shadow-xl flex flex-col gap-4 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <h2 className="text-xl font-bold">
+            {!modalType ? t('floating_add.what_to_add') : t('modal.expense.expense_type')}
+          </h2>
+          <div className="overflow-hidden w-full px-1">
+            <div className="grid">
+              
+              {/* Step 1: Type Selection */}
+              <div 
+                className={`col-start-1 row-start-1 grid grid-cols-2 gap-3 transition-all duration-300 ease-in-out ${modalType === 'SELECT_EXPENSE_TYPE' ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+              >
+                <button 
+                  onClick={() => setModalType("SELECT_EXPENSE_TYPE")}
+                  className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform aspect-square"
+                >
+                  <TrendingDown className="w-8 h-8 text-rose-500" />
+                  <span className="text-sm">{t('modal.expense.title')}</span>
+                </button>
+                <button 
+                  onClick={() => setModalType("INCOME")}
+                  className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 text-emerald-600 dark:text-emerald-500 active:scale-95 transition-transform aspect-square"
+                >
+                  <TrendingUp className="w-8 h-8 text-emerald-600 dark:text-emerald-500" />
+                  <span className="text-sm">{t('modal.income.add_btn')}</span>
+                </button>
+              </div>
+
+              {/* Step 2: Expense Type Selection */}
+              <div 
+                className={`col-start-1 row-start-1 grid grid-cols-2 gap-3 transition-all duration-300 ease-in-out ${modalType === 'SELECT_EXPENSE_TYPE' ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}
+              >
+                <button 
+                  onClick={() => {
+                    setExpenseType("FIXED");
+                    setModalType("TRANSACTION");
+                  }}
+                  className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform aspect-square"
+                >
+                  <Pin className="w-8 h-8 text-primary" />
+                  <span className="text-sm">{t('modal.expense.type_fixed') || "Фіксована витрата"}</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setExpenseType("FLOATING");
+                    setModalType("TRANSACTION");
+                  }}
+                  className="p-4 bg-muted rounded-xl font-medium flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform aspect-square text-blue-600 dark:text-blue-500"
+                >
+                  <PieChart className="w-8 h-8 text-blue-600 dark:text-blue-500" />
+                  <span className="text-sm">{t('modal.expense.type_floating') || "Створити бюджет"}</span>
+                </button>
+              </div>
+
+            </div>
           </div>
 
-          <button onClick={() => setIsOpen(false)} className="w-full p-4 text-muted-foreground pb-8 sm:pb-4 active:scale-95 transition-transform">
-            {t('btn.cancel')}
+          <button 
+            onClick={() => {
+              if (modalType === "SELECT_EXPENSE_TYPE") {
+                setModalType(null); // Go back
+              } else {
+                setIsOpen(false);
+              }
+            }} 
+            className="w-full p-4 text-muted-foreground pb-8 sm:pb-4 active:scale-95 transition-transform"
+          >
+            {modalType === "SELECT_EXPENSE_TYPE" ? "Назад" : t('btn.cancel')}
           </button>
         </div>
       </div>
@@ -69,7 +126,7 @@ export function FloatingAddButton({ isSharedPage = false, currentTab = "personal
   return (
     <>
       {modalType === "TRANSACTION" && (
-        <AddTransactionModal categories={categories} isSharedPage={isSharedPage} onClose={() => { setIsOpen(false); setModalType(null); }} />
+        <AddTransactionModal initialExpenseType={expenseType} categories={categories} isSharedPage={isSharedPage} onClose={() => { setIsOpen(false); setModalType(null); }} />
       )}
       {modalType === "INCOME" && (
         <IncomeModal isSharedPage={isSharedPage} onClose={() => { setIsOpen(false); setModalType(null); }} />

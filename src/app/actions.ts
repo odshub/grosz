@@ -40,6 +40,8 @@ export async function addTransaction(formData: FormData) {
   const isPaid = explicitIsPaid !== null ? explicitIsPaid === "true" : type === "INCOME";
   const expenseType = (formData.get("expenseType") as string) || "FIXED";
   const isRecurring = formData.get("isRecurring") === "true";
+  const isVariableAmount = formData.get("isVariableAmount") === "true";
+  const operationDate = formData.get("operationDate") as string || null;
 
   let finalCategoryId = categoryId || null;
   if (!finalCategoryId && type !== "INCOME") {
@@ -59,6 +61,8 @@ export async function addTransaction(formData: FormData) {
     is_paid: isPaid,
     expense_type: expenseType,
     is_recurring: isRecurring,
+    is_variable_amount: isVariableAmount,
+    operation_date: operationDate,
   });
   if (error) {
     console.error("Error adding transaction:", error);
@@ -77,6 +81,15 @@ export async function deleteTransaction(id: string) {
   revalidatePath("/transactions");
 }
 
+export async function deleteTransactions(ids: string[]) {
+  if (!ids || ids.length === 0) return;
+  await supabaseAdmin.from("transactions").delete().in("id", ids);
+  revalidatePath("/");
+  revalidatePath("/shared");
+  revalidatePath("/transactions");
+}
+
+
 export async function editTransaction(id: string, formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const type = formData.get("type") as "INCOME" | "EXPENSE";
@@ -86,6 +99,7 @@ export async function editTransaction(id: string, formData: FormData) {
   const isPaid = formData.get("isPaid") === "true";
   const isShared = formData.get("isShared") === "true";
   const isRecurring = formData.get("isRecurring") === "true";
+  const operationDate = formData.get("operationDate") as string || null;
 
   await supabaseAdmin.from("transactions").update({
     amount,
@@ -96,6 +110,7 @@ export async function editTransaction(id: string, formData: FormData) {
     is_paid: isPaid,
     scope: isShared ? "SHARED" : "PERSONAL",
     is_recurring: isRecurring,
+    operation_date: operationDate,
   }).eq("id", id);
 
   revalidatePath("/");
@@ -107,6 +122,7 @@ export async function addSubTransaction(formData: FormData) {
   const parentId = formData.get("parentId") as string;
   const amount = parseFloat(formData.get("amount") as string);
   const label = (formData.get("label") as string) || null;
+  const operationDate = formData.get("operationDate") as string || new Date().toISOString();
   
   // We need the parent's currency and category and type to match
   const { data: parent } = await supabaseAdmin.from("transactions").select("*").eq("id", parentId).single();
@@ -123,6 +139,7 @@ export async function addSubTransaction(formData: FormData) {
     is_paid: true, // Sub-transactions are considered "spent"
     expense_type: "FIXED",
     parent_id: parentId,
+    operation_date: operationDate,
   });
 
   revalidatePath("/");
@@ -130,7 +147,18 @@ export async function addSubTransaction(formData: FormData) {
 }
 
 export async function toggleTransactionPaid(id: string, isPaid: boolean) {
-  await supabaseAdmin.from("transactions").update({ is_paid: isPaid }).eq("id", id);
+  const { data: tx } = await supabaseAdmin.from("transactions").select("operation_date").eq("id", id).single();
+  const updateData: Record<string, boolean | string> = { is_paid: isPaid };
+  if (isPaid && tx && !tx.operation_date) {
+    updateData.operation_date = new Date().toISOString();
+  }
+  await supabaseAdmin.from("transactions").update(updateData).eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/shared");
+}
+
+export async function updateTransactionAmount(id: string, newAmount: number) {
+  await supabaseAdmin.from("transactions").update({ amount: newAmount }).eq("id", id);
   revalidatePath("/");
   revalidatePath("/shared");
 }
@@ -190,6 +218,7 @@ export async function addEnvelope(formData: FormData) {
   const icon = (formData.get("icon") as "cash" | "credit") || "cash";
   const isShared = formData.get("isShared") === "true";
   const color = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+  const isMonthlyContribution = formData.get("isMonthlyContribution") === "true";
 
   await supabaseAdmin.from("tags").insert({
     name,
@@ -198,6 +227,7 @@ export async function addEnvelope(formData: FormData) {
     color,
     user_id: user.id,
     scope: isShared ? "SHARED" : "PERSONAL",
+    is_monthly_contribution: isMonthlyContribution,
   });
 
   revalidatePath("/");
@@ -294,8 +324,9 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
     );
 
     for (const t of templatesToCopy) {
+      const tAny = t as Record<string, unknown>;
       await supabaseAdmin.from("transactions").insert({
-        amount: t.amount,
+        amount: tAny.is_variable_amount ? 0 : t.amount,
         type: t.type,
         currency: t.currency,
         scope: t.scope,
@@ -306,6 +337,7 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
         is_paid: false,
         expense_type: t.expense_type,
         is_recurring: t.is_recurring,
+        is_variable_amount: tAny.is_variable_amount,
         created_at: new Date(now.getFullYear(), now.getMonth(), 1, 12, 5, 0).toISOString()
       });
     }

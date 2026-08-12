@@ -15,7 +15,7 @@ interface FloatingTransactionModalProps {
     label: string | null;
     categoryColor: string;
   };
-  subTransactions: { id: string; amount: number; label: string | null; created_at?: string; currency: string; users?: { email: string, name?: string | null } | null }[];
+  subTransactions: { id: string; amount: number; label: string | null; created_at?: string; operation_date?: string; currency: string; users?: { email: string, name?: string | null } | null }[];
   onClose: () => void;
 }
 
@@ -98,9 +98,9 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
                 <div key={st.id} className="flex justify-between items-center p-4 bg-card border border-border rounded-xl shadow-sm">
                   <div>
                     <span className="font-medium text-sm block">{st.label || t('history.untitled')}</span>
-                    {st.created_at && (
+                    {(st.operation_date || st.created_at) && (
                       <span className="text-[10px] text-muted-foreground mt-0.5 block">
-                        {new Intl.DateTimeFormat("uk-UA", { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(st.created_at))}
+                        {new Intl.DateTimeFormat("uk-UA", { day: '2-digit', month: '2-digit', hour: st.operation_date?.includes('T') || !st.operation_date ? '2-digit' : undefined, minute: st.operation_date?.includes('T') || !st.operation_date ? '2-digit' : undefined }).format(new Date(st.operation_date || st.created_at || new Date()))}
                         {st.users?.email ? ` • ${st.users.name || st.users.email.split("@")[0]}` : ""}
                       </span>
                     )}
@@ -131,6 +131,9 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
             <div className="flex gap-2 w-full">
               <input type="text" name="label" placeholder={t('modal.floating.input_what') as string} className="flex-1 min-w-0 p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all" required />
               <input type="number" inputMode="decimal" name="amount" step="0.01" placeholder={t('modal.floating.input_amount') as string} className="w-24 shrink-0 p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all font-semibold" required />
+            </div>
+            <div>
+              <input type="date" name="operationDate" className="w-full p-3 bg-muted border border-border rounded-xl outline-none text-sm focus:ring-2 focus:ring-primary/50 transition-all dark:scheme-dark" />
             </div>
             <button disabled={loading} type="submit" className="w-full py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl disabled:opacity-50 transition-all hover:bg-primary/90 active:scale-95 shadow-md flex items-center justify-center">
               {loading ? (

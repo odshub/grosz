@@ -5,7 +5,7 @@ import { CategoriesManager } from "@/components/CategoriesManager";
 import { CategoryGroup } from "@/components/CategoryGroup";
 import { EnvelopesList } from "@/components/EnvelopesList";
 import { supabaseAdmin } from "@/lib/supabase";
-import { deleteTransaction, executeRollover } from "@/app/actions";
+import { deleteTransaction, deleteTransactions, executeRollover } from "@/app/actions";
 import Link from "next/link";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
@@ -23,6 +23,7 @@ type Transaction = {
   expense_type?: "FIXED" | "FLOATING";
   parent_id?: string | null;
   scope: string;
+  operation_date?: string | null;
 };
 
 export default async function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -63,29 +64,36 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
     await executeRollover("PERSONAL");
   }
 
-  // Fetch personal transactions for the current month
-  const { data: transactions } = await supabaseAdmin
-    .from("transactions")
-    .select(`
-      *,
-      categories (name, color)
-    `)
-    .eq("user_id", user.id)
-    .or("scope.eq.PERSONAL,scope.is.null")
-    .is("tag_id", null)
-    .gte("created_at", currentMonthStart)
-    .order("created_at", { ascending: false });
-
-  // Fetch envelopes (tags)
-  const { data: envelopes } = await supabaseAdmin
-    .from("tags")
-    .select(`*, transactions ( id, amount, type, is_paid, created_at, label, users ( email, name ) )`)
-    .eq("user_id", user.id)
-    .or("scope.eq.PERSONAL,scope.is.null");
+  // Parallelize the data fetching
+  const [
+    { data: transactions },
+    { data: envelopes },
+    { data: categoriesData }
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("transactions")
+      .select(`
+        *,
+        categories (name, color)
+      `)
+      .eq("user_id", user.id)
+      .or("scope.eq.PERSONAL,scope.is.null")
+      .is("tag_id", null)
+      .gte("created_at", currentMonthStart)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("tags")
+      .select(`*, transactions ( id, amount, type, is_paid, created_at, operation_date, label, users ( email, name ) )`)
+      .eq("user_id", user.id)
+      .or("scope.eq.PERSONAL,scope.is.null"),
+    supabaseAdmin
+      .from("categories")
+      .select("*")
+      .eq("user_id", user.id)
+      .or("scope.eq.PERSONAL,scope.is.null")
+  ]);
 
   const envs = envelopes || [];
-
-  const { data: categoriesData } = await supabaseAdmin.from("categories").select("*").eq("user_id", user.id).or("scope.eq.PERSONAL,scope.is.null");
   const categories = categoriesData || [];
 
   const txs = (transactions || []).filter(t => !t.parent_id);
@@ -127,7 +135,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
         {currentTab === 'budget' && (
           <div className="space-y-6">
             {/* Main balance (Excludes Envelopes) */}
-            <div className="relative overflow-hidden rounded-2xl p-6 shadow-xl shadow-emerald-900/20 bg-gradient-to-tr from-emerald-950 via-teal-900 to-emerald-900 border border-emerald-700/50 text-white">
+            <div className="relative overflow-hidden rounded-2xl p-6 shadow-xl shadow-emerald-900/20 bg-linear-to-tr from-emerald-950 via-teal-900 to-emerald-900 border border-emerald-700/50 text-white">
               {/* Decorative elements */}
               <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
               <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -194,6 +202,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                           categories={categories}
                           transactionsRaw={transactions || []}
                           onDeleteTransaction={deleteTransaction}
+                          onDeleteTransactions={deleteTransactions}
                         />
                       );
                     })}
@@ -211,6 +220,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                         categories={categories}
                         transactionsRaw={transactions || []}
                         onDeleteTransaction={deleteTransaction}
+                        onDeleteTransactions={deleteTransactions}
                       />
                     )}
                   </>

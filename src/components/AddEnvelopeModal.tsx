@@ -8,6 +8,7 @@ import { Wallet, CreditCard } from "lucide-react";
 export function AddEnvelopeModal({ onClose, isSharedPage = false }: { onClose: () => void, isSharedPage?: boolean }) {
   const [loading, setLoading] = useState(false);
   const [icon, setIcon] = useState<"cash" | "credit">("cash");
+  const [isMonthlyContribution, setIsMonthlyContribution] = useState(true);
   const { t } = useTranslation();
 
   async function handleSubmit(formData: FormData) {
@@ -60,6 +61,19 @@ export function AddEnvelopeModal({ onClose, isSharedPage = false }: { onClose: (
                 <CreditCard className="w-4 h-4" />
                 <span>Credit</span>
               </button>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer" onClick={() => setIsMonthlyContribution(!isMonthlyContribution)}>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Щомісячний внесок</span>
+                <span className="text-xs text-muted-foreground">Нагадування про поповнення</span>
+              </div>
+              <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isMonthlyContribution ? "bg-primary" : "bg-border/60"}`}>
+                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${isMonthlyContribution ? "translate-x-6" : "translate-x-0"}`} />
+              </div>
+              <input type="hidden" name="isMonthlyContribution" value={isMonthlyContribution ? "true" : "false"} />
             </div>
           </div>
           <button disabled={loading} type="submit" className="w-full p-4 bg-primary text-primary-foreground font-bold rounded-xl mt-4">
