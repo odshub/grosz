@@ -8,6 +8,9 @@ export const dictionaries = {
     'app.title': 'Groszyk',
     'app.subtitle': 'Сімейні фінанси',
     'app.loading': 'Завантаження...',
+    'app.loading_title': 'Зачекайте',
+    'app.loading_subtitle': 'Рахуємо ваші грошики...',
+    'app.hello': 'Привіт',
 
     // Shared Header
     'header.personal_budget': 'Мій бюджет',
@@ -205,6 +208,9 @@ export const dictionaries = {
     'app.title': 'Groszyk',
     'app.subtitle': 'Семейные финансы',
     'app.loading': 'Загрузка...',
+    'app.loading_title': 'Загрузка',
+    'app.loading_subtitle': 'Считаем ваши денежки...',
+    'app.hello': 'Привет',
 
     // Shared Header
     'header.personal_budget': 'Мой бюджет',

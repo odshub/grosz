@@ -1,5 +1,6 @@
 import { MobileAppLayout } from "@/components/MobileAppLayout";
 import { AppHeader } from "@/components/AppHeader";
+import { EditableGreeting } from "@/components/EditableGreeting";
 import { FloatingAddButton } from "@/components/FloatingAddButton";
 import { CategoriesManager } from "@/components/CategoriesManager";
 import { CategoryGroup } from "@/components/CategoryGroup";
@@ -147,7 +148,7 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
                     <path d="M4 6h16v12H4V6zm2 2v2h3V8H6zm0 4v2h3v-2H6zm0 4v2h3v-2H6zm10-8v2h2V8h-2zm0 4v2h2v-2h-2zm0 4v2h2v-2h-2zm-5-8v8h3V8h-3z" opacity=".8"/>
                     <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/>
                   </svg>
-                  <span className="font-bold text-lg tracking-widest text-slate-300 opacity-70">GROSZYK</span>
+                  <EditableGreeting fallbackText={t('app.title') as string} />
                 </div>
                 
                 {/* Middle: Balance */}

@@ -1,23 +1,32 @@
-import { PiggyBank, CircleDollarSign } from "lucide-react";
+import { getTranslation } from "@/lib/i18n";
 
-export default function Loading() {
+export default async function Loading() {
+  const t = await getTranslation();
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] w-full animate-in fade-in duration-300">
-      <div className="relative flex flex-col items-center justify-center mb-6 w-24 h-24">
-        {/* Монетка, що стрибає */}
-        <div className="absolute -top-6 animate-bounce z-10">
-          <CircleDollarSign className="w-8 h-8 text-yellow-500 fill-yellow-500/20" strokeWidth={1.5} />
-        </div>
+    <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] w-full animate-in fade-in zoom-in-95 duration-500">
+      <div className="relative flex items-center justify-center w-24 h-24 mb-8">
+        {/* Світіння на фоні */}
+        <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl animate-pulse" />
         
-        {/* Скарбничка */}
-        <PiggyBank className="w-16 h-16 text-primary relative z-20" strokeWidth={1.5} />
+        {/* Зовнішнє кільце */}
+        <div className="absolute inset-0 rounded-full border-y-[1.5px] border-primary/20 animate-[spin_3s_linear_infinite]" />
         
-        {/* Тінь / світіння під скарбничкою */}
-        <div className="absolute bottom-0 w-16 h-4 bg-primary/20 blur-md rounded-[100%] animate-pulse"></div>
+        {/* Внутрішнє кільце */}
+        <div className="absolute inset-3 rounded-full border-x-[1.5px] border-primary/50 animate-[spin_2s_linear_infinite_reverse]" />
+        
+        {/* Центральне ядро */}
+        <div className="absolute inset-8 rounded-full bg-linear-to-tr from-primary/80 to-primary/40 animate-pulse shadow-lg shadow-primary/20" />
       </div>
-      <p className="text-muted-foreground font-medium animate-pulse text-lg tracking-wide">
-        Рахуємо копієчки...
-      </p>
+      
+      <div className="flex flex-col items-center space-y-2">
+        <h3 className="text-xl font-medium tracking-tight text-foreground/90">
+          {t('app.loading_title')}
+        </h3>
+        <p className="text-sm text-muted-foreground/80 animate-pulse font-light tracking-wide">
+          {t('app.loading_subtitle')}
+        </p>
+      </div>
     </div>
   );
 }

@@ -37,8 +37,8 @@ export function ProfileModal() {
     <>
       <div className="flex items-center gap-2">
         {(nickname || email.split("@")[0]) && (
-          <span className="text-sm font-medium text-foreground truncate max-w-30">
-            {nickname || email.split("@")[0]}
+          <span className="text-sm font-medium text-foreground truncate max-w-40">
+            {t('app.hello')}, {nickname || email.split("@")[0]}
           </span>
         )}
         <button 
