@@ -130,6 +130,48 @@ export function ProfileModal() {
                   </button>
                 </div>
               </div>
+
+              {/* Push Notifications */}
+              <div>
+                <button 
+                  onClick={async () => {
+                    if (!("Notification" in window)) {
+                      alert("This browser does not support push notifications.");
+                      return;
+                    }
+                    const permission = await Notification.requestPermission();
+                    if (permission === "granted") {
+                      try {
+                        const registration = await navigator.serviceWorker.ready;
+                        let subscription = await registration.pushManager.getSubscription();
+                        if (!subscription) {
+                          const response = await fetch("/api/push/vapid-public-key");
+                          const { publicKey } = await response.json();
+                          subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: publicKey
+                          });
+                        }
+                        await fetch("/api/push/subscribe", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(subscription)
+                        });
+                        alert(locale === 'uk' ? "Сповіщення увімкнено!" : "Уведомления включены!");
+                      } catch (err) {
+                        console.error("Failed to subscribe to push notifications", err);
+                        alert(locale === 'uk' ? "Помилка при налаштуванні сповіщень." : "Ошибка при настройке уведомлений.");
+                      }
+                    } else {
+                      alert(locale === 'uk' ? "Ви відхилили дозвіл на сповіщення." : "Вы отклонили разрешение на уведомления.");
+                    }
+                  }}
+                  className="w-full p-3 flex items-center justify-center gap-2 border-2 border-primary/20 text-primary font-medium rounded-xl hover:bg-primary/10 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                  {locale === 'uk' ? 'Увімкнути сповіщення' : 'Включить уведомления'}
+                </button>
+              </div>
               
               <button 
                 onClick={() => signOut({ callbackUrl: "/" })}

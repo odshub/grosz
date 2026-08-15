@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sendNotificationToUser } from "@/lib/push";
 
 async function getCurrentUser() {
   const session = await getServerSession(authOptions);
@@ -67,6 +68,32 @@ export async function addTransaction(formData: FormData) {
   if (error) {
     console.error("Error adding transaction:", error);
     return { error: error.message };
+  }
+
+  // Push notification for shared envelope top-up
+  if (isShared && type === "INCOME" && tagId) {
+    try {
+      const { data: tag } = await supabaseAdmin.from("tags").select("name").eq("id", tagId).single();
+      if (tag) {
+        const { data: allUsers } = await supabaseAdmin.from("users").select("id, language, name");
+        if (allUsers) {
+          for (const u of allUsers) {
+            if (u.id !== user.id) {
+              const userName = user.name || user.email?.split("@")[0] || "Користувач";
+              await sendNotificationToUser(u.id, {
+                title: u.language === 'ru' ? "Пополнение конверта" : "Поповнення конверту",
+                body: u.language === 'ru' 
+                  ? `${userName} пополнил(а) ${tag.name} на ${amount} ${currency}` 
+                  : `${userName} поповнив(ла) ${tag.name} на ${amount} ${currency}`,
+                url: "/"
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to send envelope top-up push", e);
+    }
   }
 
   revalidatePath("/");
@@ -246,12 +273,31 @@ export async function deleteEnvelope(id: string) {
 
 export async function saveSharedNote(content: string) {
   const { data: notes } = await supabaseAdmin.from("shared_notes").select("*").limit(1);
+  const { user } = await getCurrentUser();
   
   if (notes && notes.length > 0) {
     await supabaseAdmin.from("shared_notes").update({ content }).eq("id", notes[0].id);
   } else {
     await supabaseAdmin.from("shared_notes").insert({ content });
   }
+  
+  try {
+    const { data: allUsers } = await supabaseAdmin.from("users").select("id, language");
+    if (allUsers) {
+      for (const u of allUsers) {
+        if (u.id !== user.id) { // Notify others
+          await sendNotificationToUser(u.id, {
+            title: u.language === 'ru' ? "Общая заметка обновлена" : "Спільну нотатку оновлено",
+            body: content,
+            url: "/notepad"
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to send shared note push", e);
+  }
+
   revalidatePath("/notepad");
 }
 
@@ -368,6 +414,24 @@ export async function createNote(content: string) {
     content,
     user_id: user.id
   });
+  
+  try {
+    const { data: allUsers } = await supabaseAdmin.from("users").select("id, language");
+    if (allUsers) {
+      for (const u of allUsers) {
+        if (u.id !== user.id) { // Notify others
+          await sendNotificationToUser(u.id, {
+            title: u.language === 'ru' ? "Новая заметка" : "Нова нотатка",
+            body: content,
+            url: "/notepad"
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to send note push", e);
+  }
+  
   revalidatePath('/notepad');
 }
 
@@ -388,6 +452,16 @@ export async function getNotesCount() {
 export async function setLocale(locale: "uk" | "ru") {
   const cookieStore = await cookies();
   cookieStore.set("locale", locale, { maxAge: 60 * 60 * 24 * 365 });
+  
+  try {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email) {
+      await supabaseAdmin.from("users").update({ language: locale }).eq("email", session.user.email);
+    }
+  } catch (e) {
+    console.error("Failed to save language to DB", e);
+  }
+  
   revalidatePath("/");
 }
 
@@ -403,4 +477,70 @@ export async function updateUserName(name: string) {
 export async function getUserNickname() {
   const { user } = await getCurrentUser();
   return user.name || "";
+}
+
+// ==========================================
+// METERS (Лічильники)
+// ==========================================
+
+export async function addMeter(formData: FormData) {
+  const { user } = await getCurrentUser();
+  const name = formData.get("name") as string;
+  const unit = formData.get("unit") as string;
+  const defaultPrice = formData.get("defaultPricePerUnit") ? parseFloat(formData.get("defaultPricePerUnit") as string) : null;
+
+  const { error } = await supabaseAdmin.from("meters").insert({
+    user_id: user.id,
+    name,
+    unit,
+    default_price_per_unit: defaultPrice,
+  });
+
+  if (error) {
+    console.error("Error adding meter:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/meters");
+  return { success: true };
+}
+
+export async function deleteMeter(id: string) {
+  await supabaseAdmin.from("meters").delete().eq("id", id);
+  revalidatePath("/meters");
+}
+
+export async function addMeterReading(formData: FormData) {
+  const meterId = formData.get("meterId") as string;
+  let date = formData.get("date") as string;
+  if (date && date.length === 7) {
+    date = `${date}-01`;
+  }
+  const previousReading = parseFloat(formData.get("previousReading") as string) || 0;
+  const currentReading = parseFloat(formData.get("currentReading") as string);
+  const pricePerUnit = parseFloat(formData.get("pricePerUnit") as string);
+  
+  const totalCost = (currentReading - previousReading) * pricePerUnit;
+
+  const { error } = await supabaseAdmin.from("meter_readings").insert({
+    meter_id: meterId,
+    date,
+    previous_reading: previousReading,
+    current_reading: currentReading,
+    price_per_unit: pricePerUnit,
+    total_cost: totalCost > 0 ? totalCost : 0,
+  });
+
+  if (error) {
+    console.error("Error adding meter reading:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/meters");
+  return { success: true };
+}
+
+export async function deleteMeterReading(id: string) {
+  await supabaseAdmin.from("meter_readings").delete().eq("id", id);
+  revalidatePath("/meters");
 }

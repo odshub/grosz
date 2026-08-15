@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Users, Wallet, FileText } from "lucide-react";
+import { User, Users, Wallet, FileText, Gauge } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ const navItems = [
   { href: "/", labelKey: "nav.personal" as const, icon: User },
   { href: "/shared", labelKey: "nav.shared" as const, icon: Users },
   { href: "/transactions", labelKey: "nav.history" as const, icon: Wallet },
+  { href: "/meters", labelKey: "nav.meters" as const, icon: Gauge },
   { href: "/notepad", labelKey: "nav.notes" as const, icon: FileText, showBadge: true },
 ];
 

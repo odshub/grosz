@@ -52,3 +52,8 @@ add_recurring_column.sql
 add_is_monthly_contribution_to_tags.sql
 add_is_variable_amount.sql
 add_operation_date.sql
+create_meters_schema.sql
+create_push_subscriptions.sql
+
+sql/
+add_language_to_users.sql
