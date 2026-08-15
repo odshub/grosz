@@ -157,7 +157,14 @@ export function ProfileModal() {
                     try {
                       const permission = await Notification.requestPermission();
                       if (permission === "granted") {
-                        const registration = await navigator.serviceWorker.getRegistration();
+                        let registration = await navigator.serviceWorker.getRegistration();
+                        if (!registration) {
+                          try {
+                            registration = await navigator.serviceWorker.register('/sw.js');
+                          } catch (e) {
+                            console.error("SW registration failed", e);
+                          }
+                        }
                         if (!registration) {
                           alert(locale === 'uk' ? "Сервіс-воркер не знайдено. Переконайтеся, що PWA працює." : "Сервис-воркер не найден.");
                           setIsPushLoading(false);
