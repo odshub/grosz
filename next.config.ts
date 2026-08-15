@@ -6,8 +6,7 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: false, // Enabled in dev to allow testing push notifications
   register: true,
-  skipWaiting: true,
-  customWorkerDir: "worker",
+  customWorkerSrc: "worker",
 });
 
 const nextConfig: NextConfig = {
