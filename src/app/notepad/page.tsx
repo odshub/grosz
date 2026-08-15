@@ -9,6 +9,13 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function NotepadPage() {
+  type Note = {
+    id: string;
+    content: string;
+    created_at: string;
+    user_id: string;
+    users?: { email: string; name?: string | null } | null;
+  };
   const t = await getTranslation();
   
   const session = await getServerSession(authOptions);
@@ -35,7 +42,7 @@ export default async function NotepadPage() {
     `)
     .order("created_at", { ascending: false });
 
-  const typedNotes = (notes || []) as any[];
+  const typedNotes = (notes || []) as unknown as Note[];
 
   return (
     <MobileAppLayout>
@@ -48,7 +55,7 @@ export default async function NotepadPage() {
         <div className="flex-1 overflow-hidden">
           <NotepadClient 
             initialNotes={typedNotes} 
-            currentUser={{ email: user.email, id: user.id }} 
+            currentUser={{ email: user.email, id: user.id, name: user.name }} 
           />
         </div>
       </div>

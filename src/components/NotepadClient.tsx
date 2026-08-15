@@ -13,7 +13,7 @@ type Note = {
   user_id: string;
 };
 
-export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Note[], currentUser: { email: string, id: string } }) {
+export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Note[], currentUser: { email: string, id: string, name?: string | null } }) {
   const [notes, setNotes] = useState(initialNotes);
   const [search, setSearch] = useState("");
   const [newNote, setNewNote] = useState("");
@@ -50,7 +50,7 @@ export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Not
       id: "temp-" + Date.now(),
       content,
       created_at: new Date().toISOString(),
-      users: { email: currentUser.email },
+      users: { email: currentUser.email, name: currentUser.name },
       user_id: currentUser.id
     };
     
@@ -97,7 +97,7 @@ export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Not
             placeholder={t('notes.search_placeholder') as string}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-card rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm shadow-sm"
+            className="w-full pl-9 pr-4 py-2 bg-card rounded-xl border border-border focus:outline-none focus:border-primary text-sm shadow-sm"
           />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground hover:text-foreground">
@@ -130,7 +130,7 @@ export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Not
           value={newNote}
           onChange={e => setNewNote(e.target.value)}
           placeholder={t('notes.placeholder') as string}
-          className="w-full p-4 pr-12 bg-card rounded-xl resize-none outline-none focus:ring-2 focus:ring-primary border border-border min-h-25 shadow-sm"
+          className="w-full p-4 pr-12 bg-card rounded-xl resize-none outline-none focus:border-primary border border-border min-h-25 shadow-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -165,9 +165,13 @@ export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Not
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="min-h-25 flex flex-col items-center justify-center text-muted-foreground p-8 border-2 border-dashed border-border rounded-2xl bg-muted/20">
-                <span>{note.users?.email ? (note.users.name || note.users.email.split("@")[0]) : t('notes.unknown_user')}</span>
-                <span>{new Date(note.created_at).toLocaleString(locale === "uk" ? "uk-UA" : "ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+              <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                <span className="font-medium truncate pr-2">
+                  {note.users?.email ? (note.users.name || note.users.email.split("@")[0]) : t('notes.unknown_user')}
+                </span>
+                <span className="whitespace-nowrap shrink-0 opacity-80">
+                  {new Date(note.created_at).toLocaleString(locale === "uk" ? "uk-UA" : "ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </span>
               </div>
             </div>
           ))
