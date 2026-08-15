@@ -97,7 +97,7 @@ export function NotepadClient({ initialNotes, currentUser }: { initialNotes: Not
             placeholder={t('notes.search_placeholder') as string}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-card rounded-xl border border-border focus:outline-none focus:border-primary text-sm shadow-sm"
+            className="w-full pl-9 pr-4 py-2 bg-card rounded-xl border border-border focus:outline-none focus:border-primary text-base shadow-sm"
           />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground hover:text-foreground">

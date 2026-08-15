@@ -34,10 +34,12 @@ export function ProfileModal() {
       getUserNickname().then(name => setNickname(name || ""));
       
       if ("serviceWorker" in navigator && "PushManager" in window) {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.pushManager.getSubscription().then(sub => {
-            setIsSubscribed(!!sub);
-          });
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg) {
+            reg.pushManager.getSubscription().then(sub => {
+              setIsSubscribed(!!sub);
+            });
+          }
         });
       }
     }, 0);
@@ -155,7 +157,12 @@ export function ProfileModal() {
                     try {
                       const permission = await Notification.requestPermission();
                       if (permission === "granted") {
-                        const registration = await navigator.serviceWorker.ready;
+                        const registration = await navigator.serviceWorker.getRegistration();
+                        if (!registration) {
+                          alert(locale === 'uk' ? "Сервіс-воркер не знайдено. Переконайтеся, що PWA працює." : "Сервис-воркер не найден.");
+                          setIsPushLoading(false);
+                          return;
+                        }
                         let subscription = await registration.pushManager.getSubscription();
                         if (!subscription) {
                           const response = await fetch("/api/push/vapid-public-key");
