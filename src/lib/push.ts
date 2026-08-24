@@ -2,8 +2,9 @@ import webpush from "web-push";
 import { supabaseAdmin } from "./supabase";
 
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  const subject = process.env.VAPID_SUBJECT || "mailto:test@example.com";
   webpush.setVapidDetails(
-    "mailto:" + (process.env.VAPID_SUBJECT || "test@example.com"),
+    subject.startsWith("mailto:") ? subject : "mailto:" + subject,
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );
@@ -36,7 +37,7 @@ export async function sendNotificationToUser(userId: string, payload: { title: s
         JSON.stringify({
           title: payload.title,
           body: payload.body,
-          data: { url: payload.url || "/" },
+          url: payload.url || "/"
         })
       );
     } catch (error) {
