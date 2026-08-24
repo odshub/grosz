@@ -45,7 +45,7 @@ export async function addTransaction(formData: FormData) {
   const operationDate = formData.get("operationDate") as string || null;
 
   let finalCategoryId = categoryId || null;
-  if (!finalCategoryId && type !== "INCOME") {
+  if (!finalCategoryId && type !== "INCOME" && !tagId) {
     const { data: cat } = await supabaseAdmin.from("categories").select("id").eq("user_id", user.id).limit(1).single();
     if (cat) finalCategoryId = cat.id;
   }
@@ -262,8 +262,8 @@ export async function addEnvelope(formData: FormData) {
 }
 
 export async function deleteEnvelope(id: string) {
-  // Disconnect transactions first
-  await supabaseAdmin.from("transactions").update({ tag_id: null }).eq("tag_id", id);
+  // Delete transactions associated with the envelope
+  await supabaseAdmin.from("transactions").delete().eq("tag_id", id);
   
   // Delete envelope
   await supabaseAdmin.from("tags").delete().eq("id", id);
@@ -338,6 +338,7 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
     .from("transactions")
     .select("*")
     .eq("scope", scope)
+    .is("tag_id", null)
     .gte("created_at", prevMonthStart)
     .lt("created_at", currentMonthStart);
 

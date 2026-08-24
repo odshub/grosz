@@ -57,3 +57,5 @@ create_push_subscriptions.sql
 
 sql/
 add_language_to_users.sql
+fix_fonts.js
+fix_fonts2.js

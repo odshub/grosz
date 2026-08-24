@@ -75,13 +75,17 @@ export function MetersManager({ meters, readings, texts }: MetersManagerProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium mb-1 block">{texts.unit}</label>
-                <input 
-                  type="text" 
+                <select 
                   name="unit" 
                   required 
-                  placeholder={texts.unit_placeholder}
-                  className="w-full p-3 rounded-xl border border-border bg-background"
-                />
+                  defaultValue=""
+                  className="w-full p-3 rounded-xl border border-border bg-background text-base"
+                >
+                  <option value="" disabled>{texts.unit_placeholder}</option>
+                  <option value="кВт⋅год">кВт⋅год (Електроенергія)</option>
+                  <option value="м³">м³ (Вода, Газ)</option>
+                  <option value="Гкал">Гкал (Опалення)</option>
+                </select>
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">{texts.price} (необов&apos;язково)</label>
