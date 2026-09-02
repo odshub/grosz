@@ -132,7 +132,7 @@ export async function deleteTransactions(ids: string[]) {
   
   if (txs) {
     // Unique user-scope-month combinations
-    const updates = new Set<string>();
+
     for (const tx of txs) {
       // Find the earliest month for each user/scope
       await recalculateRolloversFrom(tx.scope as "PERSONAL" | "SHARED", new Date(tx.created_at), tx.user_id);
@@ -196,7 +196,12 @@ export async function addSubTransaction(formData: FormData) {
   const parentId = formData.get("parentId") as string;
   const amount = parseFloat(formData.get("amount") as string);
   const label = (formData.get("label") as string) || null;
-  const operationDate = formData.get("operationDate") as string || new Date().toISOString();
+  const operationDate = formData.get("operationDate") as string || null;
+  
+  let createdAt = new Date().toISOString();
+  if (operationDate) {
+    createdAt = new Date(`${operationDate}T12:00:00Z`).toISOString();
+  }
   
   // We need the parent's currency and category and type to match
   const { data: parent } = await supabaseAdmin.from("transactions").select("*").eq("id", parentId).single();
@@ -214,7 +219,10 @@ export async function addSubTransaction(formData: FormData) {
     expense_type: "FIXED",
     parent_id: parentId,
     operation_date: operationDate,
+    created_at: createdAt,
   });
+
+  await recalculateRolloversFrom(parent.scope as "PERSONAL" | "SHARED", new Date(createdAt), user.id);
 
   revalidatePath("/");
   revalidatePath("/shared");
