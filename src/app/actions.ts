@@ -50,11 +50,18 @@ export async function addTransaction(formData: FormData) {
     if (cat) finalCategoryId = cat.id;
   }
 
+  let createdAt = new Date().toISOString();
+  if (operationDate) {
+    createdAt = new Date(`${operationDate}T12:00:00Z`).toISOString();
+  }
+
+  const scope = isShared ? "SHARED" : "PERSONAL";
+
   const { error } = await supabaseAdmin.from("transactions").insert({
     amount,
     type,
     currency,
-    scope: isShared ? "SHARED" : "PERSONAL",
+    scope,
     user_id: user.id,
     category_id: finalCategoryId || null,
     tag_id: tagId || null,
@@ -64,11 +71,15 @@ export async function addTransaction(formData: FormData) {
     is_recurring: isRecurring,
     is_variable_amount: isVariableAmount,
     operation_date: operationDate,
+    created_at: createdAt,
   });
   if (error) {
     console.error("Error adding transaction:", error);
     return { error: error.message };
   }
+
+  // Check if we need to recalculate rollovers for past months
+  await recalculateRolloversFrom(scope, new Date(createdAt), user.id);
 
   // Push notification for shared envelope top-up
   if (isShared && type === "INCOME" && tagId) {
@@ -102,7 +113,11 @@ export async function addTransaction(formData: FormData) {
 }
 
 export async function deleteTransaction(id: string) {
+  const { data: tx } = await supabaseAdmin.from("transactions").select("created_at, scope, user_id").eq("id", id).single();
   await supabaseAdmin.from("transactions").delete().eq("id", id);
+  if (tx) {
+    await recalculateRolloversFrom(tx.scope as "PERSONAL" | "SHARED", new Date(tx.created_at), tx.user_id);
+  }
   revalidatePath("/");
   revalidatePath("/shared");
   revalidatePath("/transactions");
@@ -110,7 +125,20 @@ export async function deleteTransaction(id: string) {
 
 export async function deleteTransactions(ids: string[]) {
   if (!ids || ids.length === 0) return;
+  
+  // We need to fetch them to know their months to recalculate
+  const { data: txs } = await supabaseAdmin.from("transactions").select("created_at, scope, user_id").in("id", ids);
   await supabaseAdmin.from("transactions").delete().in("id", ids);
+  
+  if (txs) {
+    // Unique user-scope-month combinations
+    const updates = new Set<string>();
+    for (const tx of txs) {
+      // Find the earliest month for each user/scope
+      await recalculateRolloversFrom(tx.scope as "PERSONAL" | "SHARED", new Date(tx.created_at), tx.user_id);
+    }
+  }
+
   revalidatePath("/");
   revalidatePath("/shared");
   revalidatePath("/transactions");
@@ -118,6 +146,8 @@ export async function deleteTransactions(ids: string[]) {
 
 
 export async function editTransaction(id: string, formData: FormData) {
+  const { data: oldTx } = await supabaseAdmin.from("transactions").select("created_at, scope, user_id").eq("id", id).single();
+
   const amount = parseFloat(formData.get("amount") as string);
   const type = formData.get("type") as "INCOME" | "EXPENSE";
   const currency = (formData.get("currency") as "PLN" | "USD" | "EUR") || "PLN";
@@ -127,6 +157,11 @@ export async function editTransaction(id: string, formData: FormData) {
   const isShared = formData.get("isShared") === "true";
   const isRecurring = formData.get("isRecurring") === "true";
   const operationDate = formData.get("operationDate") as string || null;
+
+  let createdAt = undefined;
+  if (operationDate) {
+    createdAt = new Date(`${operationDate}T12:00:00Z`).toISOString();
+  }
 
   await supabaseAdmin.from("transactions").update({
     amount,
@@ -138,7 +173,19 @@ export async function editTransaction(id: string, formData: FormData) {
     scope: isShared ? "SHARED" : "PERSONAL",
     is_recurring: isRecurring,
     operation_date: operationDate,
+    ...(createdAt ? { created_at: createdAt } : {})
   }).eq("id", id);
+
+  if (oldTx) {
+    await recalculateRolloversFrom(oldTx.scope as "PERSONAL" | "SHARED", new Date(oldTx.created_at), oldTx.user_id);
+    if (createdAt) {
+       const oldMonth = new Date(oldTx.created_at).getMonth();
+       const newMonth = new Date(createdAt).getMonth();
+       if (oldMonth !== newMonth || new Date(oldTx.created_at).getFullYear() !== new Date(createdAt).getFullYear()) {
+         await recalculateRolloversFrom(isShared ? "SHARED" : "PERSONAL", new Date(createdAt), oldTx.user_id);
+       }
+    }
+  }
 
   revalidatePath("/");
   revalidatePath("/shared");
@@ -301,14 +348,16 @@ export async function saveSharedNote(content: string) {
   revalidatePath("/notepad");
 }
 
-export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL", shouldRevalidate: boolean = false) {
+export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL", shouldRevalidate: boolean = false, targetDate?: Date) {
   const { user } = await getCurrentUser();
-  const now = new Date();
+  const now = targetDate || new Date();
   
   // Start of current month
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   // Start of previous month
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+  // Start of next month (to bound the marker query)
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
 
   // 1. Check if rollover is already done for this month
   let markersQuery = supabaseAdmin
@@ -316,7 +365,8 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
     .select("id")
     .eq("scope", scope)
     .eq("label", `monthly_rollover_marker_${scope}`)
-    .gte("created_at", currentMonthStart);
+    .gte("created_at", currentMonthStart)
+    .lt("created_at", nextMonthStart);
 
   if (scope === "PERSONAL") {
     markersQuery = markersQuery.eq("user_id", user.id);
@@ -406,6 +456,43 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
   if (shouldRevalidate) {
     revalidatePath("/");
     revalidatePath("/shared");
+  }
+}
+
+async function recalculateRolloversFrom(scope: "PERSONAL" | "SHARED", fromDate: Date, userId: string) {
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startMonth = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+
+  // If the transaction is in the current month or future, no rollover needs to be updated.
+  if (startMonth.getTime() >= currentMonth.getTime()) return;
+
+  // Recalculate for every month from startMonth + 1 up to currentMonth
+  let monthToRecalculate = new Date(startMonth.getFullYear(), startMonth.getMonth() + 1, 1);
+  
+  while (monthToRecalculate.getTime() <= currentMonth.getTime()) {
+    const monthStartIso = monthToRecalculate.toISOString();
+    const nextMonthIso = new Date(monthToRecalculate.getFullYear(), monthToRecalculate.getMonth() + 1, 1).toISOString();
+    
+    // Delete existing marker and any duplicated ones in that specific month
+    let deleteQuery = supabaseAdmin
+      .from("transactions")
+      .delete()
+      .eq("scope", scope)
+      .eq("label", `monthly_rollover_marker_${scope}`)
+      .gte("created_at", monthStartIso)
+      .lt("created_at", nextMonthIso);
+
+    if (scope === "PERSONAL") {
+      deleteQuery = deleteQuery.eq("user_id", userId);
+    }
+    await deleteQuery;
+
+    // Run executeRollover for this month (pass false for shouldRevalidate to avoid redundant invalidations)
+    await executeRollover(scope, false, monthToRecalculate);
+    
+    // Move to next month
+    monthToRecalculate = new Date(monthToRecalculate.getFullYear(), monthToRecalculate.getMonth() + 1, 1);
   }
 }
 
