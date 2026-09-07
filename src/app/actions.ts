@@ -408,12 +408,18 @@ export async function executeRollover(scope: "PERSONAL" | "SHARED" = "PERSONAL",
 
   let prevBalance = 0;
   if (prevTransactions) {
+    const paidParentIds = new Set(
+      prevTransactions.filter(t => !t.parent_id && t.is_paid !== false).map(t => t.id)
+    );
+    
     // Calculate total incomes and expenses for this scope.
     for (const t of prevTransactions) {
       if (t.is_paid === false) continue; // Unpaid budgets don't affect balance
+      if (t.parent_id && paidParentIds.has(t.parent_id)) continue; // Exclude sub-txs of paid parents
+      
       if (t.type === "INCOME") {
         prevBalance += Number(t.amount);
-      } else if (t.type === "EXPENSE" && t.is_paid) {
+      } else if (t.type === "EXPENSE") {
         prevBalance -= Number(t.amount);
       }
     }

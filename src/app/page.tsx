@@ -99,8 +99,13 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
 
   const txs = (transactions || []).filter(t => !t.parent_id);
 
+  const paidParentIds = new Set(
+    (transactions || []).filter(t => !t.parent_id && t.is_paid !== false).map(t => t.id)
+  );
+
   const balance = (transactions || [])
     .filter(t => t.currency === "PLN" && t.is_paid !== false)
+    .filter(t => !(t.parent_id && paidParentIds.has(t.parent_id)))
     .reduce((acc, t) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
 
   const incomes = txs.filter(t => t.type === "INCOME");
@@ -115,18 +120,26 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
   }, {} as Record<string, Transaction[]>);
 
   let plannedExpenses = 0;
+  
+  const subTxSums = (transactions || [])
+    .filter(t => t.parent_id && t.currency === "PLN")
+    .reduce((acc, t) => {
+      acc[t.parent_id!] = (acc[t.parent_id!] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
   for (const catTxsRaw of Object.values(groupedExpenses)) {
     const catTxs = catTxsRaw as Transaction[];
     
-    const planned = catTxs
+    const plannedForCategory = catTxs
       .filter(t => t.currency === "PLN" && t.categories !== null && t.is_paid === false)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+      .reduce((sum, t) => {
+        const parentAmount = Number(t.amount);
+        const subSpent = subTxSums[t.id] || 0;
+        return sum + Math.max(0, parentAmount - subSpent);
+      }, 0);
       
-    const actual = catTxs
-      .filter(t => t.currency === "PLN" && t.categories !== null && t.is_paid !== false)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-      
-    plannedExpenses += Math.max(0, planned - actual);
+    plannedExpenses += plannedForCategory;
   }
 
   return (

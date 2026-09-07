@@ -96,9 +96,14 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
   const envs = envelopes || [];
   const categories = categoriesData || [];
 
+  const paidParentIds = new Set(
+    (transactions || []).filter(t => !t.parent_id && t.is_paid !== false).map(t => t.id)
+  );
+
   // Calculate overall shared balance
   const sharedBalance = (transactions || [])
     .filter(t => t.currency === "PLN" && t.is_paid !== false)
+    .filter(t => !(t.parent_id && paidParentIds.has(t.parent_id)))
     .reduce((acc, t) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
 
   const incomes = txs.filter(t => t.type === "INCOME");
