@@ -114,9 +114,20 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
     return acc;
   }, {} as Record<string, Transaction[]>);
 
-  const plannedExpenses = expenses
-    .filter(t => t.currency === "PLN" && t.categories !== null && t.is_paid === false)
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  let plannedExpenses = 0;
+  for (const catTxsRaw of Object.values(groupedExpenses)) {
+    const catTxs = catTxsRaw as Transaction[];
+    
+    const planned = catTxs
+      .filter(t => t.currency === "PLN" && t.categories !== null && t.is_paid === false)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+    const actual = catTxs
+      .filter(t => t.currency === "PLN" && t.categories !== null && t.is_paid !== false)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+    plannedExpenses += Math.max(0, planned - actual);
+  }
 
   return (
     <MobileAppLayout>
