@@ -6,34 +6,50 @@ import { deleteTransaction, deleteTransactions } from "@/app/actions";
 import { useOptimisticTransactions } from "./OptimisticProvider";
 import { useTranslation } from "@/lib/i18n/client";
 
-// Reuse the Transaction type
-type Transaction = any; 
+type Transaction = {
+  id: string;
+  amount: number | string;
+  currency: string;
+  type: "INCOME" | "EXPENSE";
+  category_id: string;
+  scope: string;
+  expense_type?: "FIXED" | "FLOATING";
+  categories: { name: string; color: string } | null;
+  parent_id?: string | null;
+  is_paid?: boolean;
+};
+
+type Category = {
+  id: string;
+  name: string;
+  color: string;
+};
 
 interface SharedBudgetClientProps {
-  categories: any[];
+  categories: Category[];
 }
 
 export function SharedBudgetClient({ categories }: SharedBudgetClientProps) {
   const { t } = useTranslation();
   const { optimisticTxs } = useOptimisticTransactions();
 
-  const txs = optimisticTxs.filter((t: any) => !t.parent_id);
+  const txs = optimisticTxs.filter((t: Transaction) => !t.parent_id);
 
   const paidParentIds = new Set(
-    optimisticTxs.filter((t: any) => !t.parent_id && t.is_paid !== false).map((t: any) => t.id)
+    optimisticTxs.filter((t: Transaction) => !t.parent_id && t.is_paid !== false).map((t: Transaction) => t.id)
   );
 
   // Calculate overall shared balance
   const sharedBalance = optimisticTxs
-    .filter((t: any) => t.currency === "PLN" && t.is_paid !== false)
-    .filter((t: any) => !(t.parent_id && paidParentIds.has(t.parent_id)))
-    .reduce((acc: number, t: any) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
+    .filter((t: Transaction) => t.currency === "PLN" && t.is_paid !== false)
+    .filter((t: Transaction) => !(t.parent_id && paidParentIds.has(t.parent_id as string)))
+    .reduce((acc: number, t: Transaction) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
 
-  const incomes = txs.filter((t: any) => t.type === "INCOME");
-  const expenses = txs.filter((t: any) => t.type === "EXPENSE");
+  const incomes = txs.filter((t: Transaction) => t.type === "INCOME");
+  const expenses = txs.filter((t: Transaction) => t.type === "EXPENSE");
 
-  const groupedExpenses = expenses.reduce((acc: any, tx: Transaction) => {
-    const catName = tx.categories?.name || t('page.no_category');
+  const groupedExpenses = expenses.reduce((acc: Record<string, Transaction[]>, tx: Transaction) => {
+    const catName = tx.categories?.name || (t('page.no_category') as string);
     if (!acc[catName]) acc[catName] = [];
     acc[catName].push(tx);
     return acc;
@@ -62,8 +78,8 @@ export function SharedBudgetClient({ categories }: SharedBudgetClientProps) {
                 const color = catTxs[0]?.categories?.color || "#cccccc";
                 
                 const total = catTxs
-                  .filter((t: any) => t.currency === "PLN")
-                  .reduce((sum: number, t: any) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
+                  .filter((t: Transaction) => t.currency === "PLN")
+                  .reduce((sum: number, t: Transaction) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
                 
                 return (
                   <CategoryGroup
@@ -86,8 +102,8 @@ export function SharedBudgetClient({ categories }: SharedBudgetClientProps) {
                   catName={t('page.income_category')}
                   catTxs={incomes}
                   total={incomes
-                    .filter((t: any) => t.currency === "PLN")
-                    .reduce((sum: number, t: any) => sum - Number(t.amount), 0)
+                    .filter((t: Transaction) => t.currency === "PLN")
+                    .reduce((sum: number, t: Transaction) => sum - Number(t.amount), 0)
                   }
                   color="#10b981"
                   categories={categories}
