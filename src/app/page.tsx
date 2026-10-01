@@ -7,7 +7,7 @@ import { BalanceCard } from "@/components/BalanceCard";
 import { EnvelopesList } from "@/components/EnvelopesList";
 import { supabaseAdmin } from "@/lib/supabase";
 import { deleteTransaction, deleteTransactions, executeRollover } from "@/app/actions";
-import Link from "next/link";
+import { TabsView } from "@/components/TabsView";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -27,25 +27,15 @@ type Transaction = {
   operation_date?: string | null;
 };
 
-export default async function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const searchParams = await props.searchParams;
-  const currentTab = typeof searchParams?.tab === 'string' ? searchParams.tab : 'budget';
+export default async function Home() {
   const t = await getTranslation();
   
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return <MobileAppLayout><div className="p-4 text-center">{t('app.subtitle')}</div></MobileAppLayout>;
   }
 
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("email", session.user.email)
-    .single();
-
-  if (!user) {
-    return <MobileAppLayout><div className="p-4 text-center">User not found</div></MobileAppLayout>;
-  }
+  const user = { id: session.user.id, email: session.user.email };
 
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -147,101 +137,92 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
       <div className="p-4 space-y-6">
         <AppHeader title={t('app.title') as string} />
         
-        {/* Tab Switcher */}
-        <div className="flex bg-muted p-1 rounded-xl mb-6">
-          <Link href="/?tab=budget" className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition-all ${currentTab === 'budget' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            {t('header.personal_budget')}
-          </Link>
-          <Link href="/?tab=envelopes" className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition-all ${currentTab === 'envelopes' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            {t('header.private_envelopes')}
-          </Link>
-        </div>
+        <TabsView
+          tab1Title={t('header.personal_budget') as string}
+          tab2Title={t('header.private_envelopes') as string}
+          tab1Content={
+            <div className="space-y-6">
+              <BalanceCard 
+                balance={balance}
+                plannedExpenses={plannedExpenses}
+                fallbackText={t('app.title') as string}
+                texts={{
+                  currentBalance: t('page.current_balance') as string,
+                  plannedExpenses: t('page.planned_expenses') as string,
+                  freeMoney: t('page.free_money') as string,
+                }}
+              />
 
-        {currentTab === 'budget' && (
-          <div className="space-y-6">
-            {/* Main balance (Excludes Envelopes) */}
-            <BalanceCard 
-              balance={balance}
-              plannedExpenses={plannedExpenses}
-              fallbackText={t('app.title') as string}
-              texts={{
-                currentBalance: t('page.current_balance') as string,
-                plannedExpenses: t('page.planned_expenses') as string,
-                freeMoney: t('page.free_money') as string,
-              }}
-            />
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-2">
-                <h3 className="font-medium text-lg">{t('page.your_transactions')}</h3>
-                <CategoriesManager categories={categories} />
-              </div>
-              
-              <div className="space-y-8 pb-4">
-                {txs.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
-                ) : (
-                  <>
-
-                    {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
-                      const catTxs = catTxsRaw as Transaction[];
-                      const color = catTxs[0]?.categories?.color || "#cccccc";
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <h3 className="font-medium text-lg">{t('page.your_transactions')}</h3>
+                  <CategoriesManager categories={categories} />
+                </div>
+                
+                <div className="space-y-8 pb-4">
+                  {txs.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
+                  ) : (
+                    <>
+                      {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
+                        const catTxs = catTxsRaw as Transaction[];
+                        const color = catTxs[0]?.categories?.color || "#cccccc";
+                        
+                        const total = catTxs
+                          .filter(t => t.currency === "PLN")
+                          .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
+                        
+                        return (
+                          <CategoryGroup 
+                            key={catName}
+                            catName={catName}
+                            catTxs={catTxs}
+                            total={total}
+                            color={color}
+                            categories={categories}
+                            transactionsRaw={transactions || []}
+                            onDeleteTransaction={deleteTransaction}
+                            onDeleteTransactions={deleteTransactions}
+                          />
+                        );
+                      })}
                       
-                      const total = catTxs
-                        .filter(t => t.currency === "PLN")
-                        .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
-                      
-                      return (
+                      {incomes.length > 0 && (
                         <CategoryGroup 
-                          key={catName}
-                          catName={catName}
-                          catTxs={catTxs}
-                          total={total}
-                          color={color}
+                          key="income_category"
+                          catName={t('page.income_category') as string}
+                          catTxs={incomes}
+                          total={incomes
+                            .filter(t => t.currency === "PLN")
+                            .reduce((sum, t) => sum - Number(t.amount), 0)
+                          }
+                          color="#10b981"
                           categories={categories}
                           transactionsRaw={transactions || []}
                           onDeleteTransaction={deleteTransaction}
                           onDeleteTransactions={deleteTransactions}
                         />
-                      );
-                    })}
-                    
-                    {incomes.length > 0 && (
-                      <CategoryGroup 
-                        key="income_category"
-                        catName={t('page.income_category') as string}
-                        catTxs={incomes}
-                        total={incomes
-                          .filter(t => t.currency === "PLN")
-                          .reduce((sum, t) => sum - Number(t.amount), 0)
-                        }
-                        color="#10b981"
-                        categories={categories}
-                        transactionsRaw={transactions || []}
-                        onDeleteTransaction={deleteTransaction}
-                        onDeleteTransactions={deleteTransactions}
-                      />
-                    )}
-                  </>
-                )}
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {currentTab === 'envelopes' && (
-          <div className="space-y-4 pt-2">
-            <EnvelopesList 
-              envelopes={envs.filter((e) => e.scope === 'PERSONAL')} 
-              isSharedPage={false} 
-              currentMonthStart={currentMonthStart} 
-            />
-          </div>
-        )}
+          }
+          tab2Content={
+            <div className="space-y-4 pt-2">
+              <EnvelopesList 
+                envelopes={envs.filter((e) => e.scope === 'PERSONAL')} 
+                isSharedPage={false} 
+                currentMonthStart={currentMonthStart} 
+              />
+            </div>
+          }
+          floatingButton={
+            <FloatingAddButton categories={categories} currentTab="budget" isSharedPage={false} />
+          }
+        />
       </div>
-      {currentTab !== 'envelopes' && (
-        <FloatingAddButton categories={categories} currentTab={currentTab as "budget"} isSharedPage={false} />
-      )}
     </MobileAppLayout>
   );
 }

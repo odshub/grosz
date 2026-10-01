@@ -13,17 +13,15 @@ async function getCurrentUser() {
     throw new Error("Not authenticated");
   }
 
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("email", session.user.email)
-    .single();
-
-  if (!user) {
-    throw new Error("User not found in database");
-  }
-  
-  return { user };
+  // Avoid hitting database for every single action
+  // The id is now populated in the JWT token (see lib/auth.ts)
+  return { 
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name
+    } 
+  };
 }
 
 export async function addTransaction(formData: FormData) {
@@ -578,7 +576,8 @@ export async function updateUserName(name: string) {
 
 export async function getUserNickname() {
   const { user } = await getCurrentUser();
-  return user.name || "";
+  const { data: dbUser } = await supabaseAdmin.from("users").select("name").eq("id", user.id).single();
+  return dbUser?.name || user.name || "";
 }
 
 // ==========================================

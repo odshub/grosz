@@ -6,7 +6,7 @@ import { FloatingAddButton } from "@/components/FloatingAddButton";
 import { EnvelopesList } from "@/components/EnvelopesList";
 import { supabaseAdmin } from "@/lib/supabase";
 import { deleteTransaction, deleteTransactions, executeRollover } from "@/app/actions";
-import Link from "next/link";
+import { TabsView } from "@/components/TabsView";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,29 +25,19 @@ type Transaction = {
   operation_date?: string | null;
 };
 
-export default async function SharedFinances(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const searchParams = await props.searchParams;
-  const currentTab = typeof searchParams?.tab === 'string' ? searchParams.tab : 'budget';
+export default async function SharedFinances() {
   const t = await getTranslation();
 
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return <MobileAppLayout><div className="p-4 text-center">{t('app.subtitle')}</div></MobileAppLayout>;
   }
+
+  const user = { id: session.user.id, email: session.user.email };
 
   // Trigger rollover check
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("email", session.user.email)
-    .single();
-
-  if (!user) {
-    return <MobileAppLayout><div className="p-4 text-center">User not found</div></MobileAppLayout>;
-  }
 
   const { data: existingMarker } = await supabaseAdmin
     .from("transactions")
@@ -121,94 +111,86 @@ export default async function SharedFinances(props: { searchParams: Promise<{ [k
       <div className="p-4 space-y-6">
         <AppHeader title={t('page.shared_finances') as string} />
         
-        {/* Tab Switcher */}
-        <div className="flex bg-muted p-1 rounded-xl">
-          <Link href="/shared?tab=budget" className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition-all ${currentTab === 'budget' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            {t('header.shared_budget')}
-          </Link>
-          <Link href="/shared?tab=envelopes" className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition-all ${currentTab === 'envelopes' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            {t('header.shared_envelopes')}
-          </Link>
-        </div>
-
-        {currentTab === 'budget' && (
-          <div className="space-y-6">
-            <div className="p-6 bg-card rounded-xl border border-border shadow-sm">
-              <p className="text-sm text-muted-foreground mb-1">{t('page.shared_balance')}</p>
-              <h2 className="text-4xl font-semibold tracking-tight">{sharedBalance.toFixed(2)} zł</h2>
-            </div>
-
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between border-b border-border pb-2">
-                <h3 className="font-medium text-lg">{t('page.your_transactions_shared')}</h3>
-                <CategoriesManager categories={categories} scope="SHARED" />
+        <TabsView
+          tab1Title={t('header.shared_budget') as string}
+          tab2Title={t('header.shared_envelopes') as string}
+          tab1Content={
+            <div className="space-y-6">
+              <div className="p-6 bg-card rounded-xl border border-border shadow-sm">
+                <p className="text-sm text-muted-foreground mb-1">{t('page.shared_balance')}</p>
+                <h2 className="text-4xl font-semibold tracking-tight">{sharedBalance.toFixed(2)} zł</h2>
               </div>
-              
-              <div className="space-y-6">
-                {txs.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
-                ) : (
-                  <>
 
-                    {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
-                      const catTxs = catTxsRaw as Transaction[];
-                      const color = catTxs[0]?.categories?.color || "#cccccc";
-                      
-                      const total = catTxs
-                        .filter(t => t.currency === "PLN")
-                        .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
-                      
-                      return (
-                        <CategoryGroup
-                          key={catName}
-                          catName={catName}
-                          catTxs={catTxs}
-                          total={total}
-                          color={color}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <h3 className="font-medium text-lg">{t('page.your_transactions_shared')}</h3>
+                  <CategoriesManager categories={categories} scope="SHARED" />
+                </div>
+                
+                <div className="space-y-6">
+                  {txs.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
+                  ) : (
+                    <>
+                      {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
+                        const catTxs = catTxsRaw as Transaction[];
+                        const color = catTxs[0]?.categories?.color || "#cccccc";
+                        
+                        const total = catTxs
+                          .filter(t => t.currency === "PLN")
+                          .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
+                        
+                        return (
+                          <CategoryGroup
+                            key={catName}
+                            catName={catName}
+                            catTxs={catTxs}
+                            total={total}
+                            color={color}
+                            categories={categories}
+                            transactionsRaw={transactions || []}
+                            onDeleteTransaction={deleteTransaction}
+                            onDeleteTransactions={deleteTransactions}
+                          />
+                        );
+                      })}
+
+                      {incomes.length > 0 && (
+                        <CategoryGroup 
+                          key="income_category"
+                          catName={t('page.income_category') as string}
+                          catTxs={incomes}
+                          total={incomes
+                            .filter(t => t.currency === "PLN")
+                            .reduce((sum, t) => sum - Number(t.amount), 0)
+                          }
+                          color="#10b981"
                           categories={categories}
                           transactionsRaw={transactions || []}
                           onDeleteTransaction={deleteTransaction}
                           onDeleteTransactions={deleteTransactions}
                         />
-                      );
-                    })}
-
-                    {incomes.length > 0 && (
-                      <CategoryGroup 
-                        key="income_category"
-                        catName={t('page.income_category') as string}
-                        catTxs={incomes}
-                        total={incomes
-                          .filter(t => t.currency === "PLN")
-                          .reduce((sum, t) => sum - Number(t.amount), 0)
-                        }
-                        color="#10b981"
-                        categories={categories}
-                        transactionsRaw={transactions || []}
-                        onDeleteTransaction={deleteTransaction}
-                        onDeleteTransactions={deleteTransactions}
-                      />
-                    )}
-                  </>
-                )}
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {currentTab === 'envelopes' && (
-          <div className="space-y-4 pt-2">
-            <EnvelopesList 
-              envelopes={envs.filter((e) => e.scope === 'SHARED' || !e.scope)} 
-              isSharedPage={true} 
-              currentMonthStart={currentMonthStart} 
-            />
-          </div>
-        )}
+          }
+          tab2Content={
+            <div className="space-y-4 pt-2">
+              <EnvelopesList 
+                envelopes={envs.filter((e) => e.scope === 'SHARED' || !e.scope)} 
+                isSharedPage={true} 
+                currentMonthStart={currentMonthStart} 
+              />
+            </div>
+          }
+          floatingButton={
+            <FloatingAddButton isSharedPage={true} currentTab="budget" categories={categories} />
+          }
+        />
       </div>
-      {currentTab !== 'envelopes' && (
-        <FloatingAddButton isSharedPage={true} currentTab={currentTab as "budget" | "envelopes"} categories={categories} />
-      )}
     </MobileAppLayout>
   );
 }

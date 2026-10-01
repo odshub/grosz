@@ -6,7 +6,14 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      email: string;
     } & DefaultSession["user"];
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    dbId?: string;
   }
 }
 
@@ -39,17 +46,33 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async session({ session }) {
-      if (session.user?.email) {
+    async jwt({ token, user }) {
+      if (user?.email) {
+        // Only run on sign in
         const { data: dbUser } = await supabaseAdmin
           .from("users")
           .select("id")
-          .eq("email", session.user.email)
+          .eq("email", user.email)
           .single();
-          
         if (dbUser) {
-          session.user.id = dbUser.id;
+          token.dbId = dbUser.id;
         }
+      } else if (!token.dbId && token.email) {
+        // Fallback for existing sessions that don't have dbId yet
+        const { data: dbUser } = await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("email", token.email)
+          .single();
+        if (dbUser) {
+          token.dbId = dbUser.id;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.dbId) {
+        session.user.id = token.dbId as string;
       }
       return session;
     },

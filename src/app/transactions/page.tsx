@@ -14,19 +14,11 @@ export default async function HistoryPage(props: { searchParams: Promise<{ [key:
   const t = await getTranslation();
   
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     redirect("/api/auth/signin");
   }
 
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("email", session.user.email)
-    .single();
-
-  if (!user) {
-    return <div className="p-4 text-center">User not found in database.</div>;
-  }
+  const user = { id: session.user.id, email: session.user.email };
 
   // Determine current month from URL or fallback to real current month
   const now = new Date();
