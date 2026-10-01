@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addCredit, updateCredit, deleteCredit, makeCreditPayment } from "@/app/actions";
 import { useDialog } from "./DialogProvider";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 type Credit = {
   id: string;
@@ -156,8 +157,7 @@ export function CreditsClient({ credits: initialCredits, texts }: CreditsClientP
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">{texts.next_payment}</label>
-              <input
-                type="date"
+              <CustomDatePicker
                 name="nextPaymentDate"
                 defaultValue={credit?.next_payment_date?.split('T')[0]?.slice(0, 10) || getTodayStr()}
                 className="w-full p-3 rounded-xl border border-border bg-background"
