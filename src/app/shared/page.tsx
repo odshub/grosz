@@ -1,29 +1,15 @@
 import { MobileAppLayout } from "@/components/MobileAppLayout";
 import { AppHeader } from "@/components/AppHeader";
-import { CategoryGroup } from "@/components/CategoryGroup";
-import { CategoriesManager } from "@/components/CategoriesManager";
 import { FloatingAddButton } from "@/components/FloatingAddButton";
 import { EnvelopesList } from "@/components/EnvelopesList";
-import { supabaseAdmin } from "@/lib/supabase";
-import { deleteTransaction, deleteTransactions, executeRollover } from "@/app/actions";
 import { TabsView } from "@/components/TabsView";
+import { SharedBudgetClient } from "@/components/SharedBudgetClient";
+import { OptimisticProvider } from "@/components/OptimisticProvider";
+import { supabaseAdmin } from "@/lib/supabase";
+import { executeRollover } from "@/app/actions";
 import { getTranslation } from "@/lib/i18n";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-type Transaction = {
-  id: string;
-  amount: number | string;
-  currency: "PLN" | "USD" | "EUR";
-  type: "INCOME" | "EXPENSE";
-  category_id: string;
-  categories: { name: string; color: string } | null;
-  label?: string | null;
-  is_paid?: boolean;
-  expense_type?: "FIXED" | "FLOATING";
-  parent_id?: string | null;
-  scope: string;
-  operation_date?: string | null;
-};
 
 export default async function SharedFinances() {
   const t = await getTranslation();
@@ -82,114 +68,35 @@ export default async function SharedFinances() {
       .eq("scope", "SHARED")
   ]);
 
-  const txs = (transactions || []).filter(t => !t.parent_id);
   const envs = envelopes || [];
   const categories = categoriesData || [];
-
-  const paidParentIds = new Set(
-    (transactions || []).filter(t => !t.parent_id && t.is_paid !== false).map(t => t.id)
-  );
-
-  // Calculate overall shared balance
-  const sharedBalance = (transactions || [])
-    .filter(t => t.currency === "PLN" && t.is_paid !== false)
-    .filter(t => !(t.parent_id && paidParentIds.has(t.parent_id)))
-    .reduce((acc, t) => t.type === "INCOME" ? acc + Number(t.amount) : acc - Number(t.amount), 0);
-
-  const incomes = txs.filter(t => t.type === "INCOME");
-  const expenses = txs.filter(t => t.type === "EXPENSE");
-
-  const groupedExpenses = expenses.reduce((acc, tx: Transaction) => {
-    const catName = tx.categories?.name || t('page.no_category');
-    if (!acc[catName]) acc[catName] = [];
-    acc[catName].push(tx);
-    return acc;
-  }, {} as Record<string, Transaction[]>);
 
   return (
     <MobileAppLayout>
       <div className="p-4 space-y-6">
         <AppHeader title={t('page.shared_finances') as string} />
         
-        <TabsView
-          tab1Title={t('header.shared_budget') as string}
-          tab2Title={t('header.shared_envelopes') as string}
-          tab1Content={
-            <div className="space-y-6">
-              <div className="p-6 bg-card rounded-xl border border-border shadow-sm">
-                <p className="text-sm text-muted-foreground mb-1">{t('page.shared_balance')}</p>
-                <h2 className="text-4xl font-semibold tracking-tight">{sharedBalance.toFixed(2)} zł</h2>
+        <OptimisticProvider transactions={transactions || []}>
+          <TabsView
+            tab1Title={t('header.shared_budget') as string}
+            tab2Title={t('header.shared_envelopes') as string}
+            tab1Content={
+              <SharedBudgetClient key="tab1" categories={categories} />
+            }
+            tab2Content={
+              <div key="tab2" className="space-y-4 pt-2">
+                <EnvelopesList 
+                  envelopes={envs.filter((e: { scope?: string }) => e.scope === 'SHARED' || !e.scope)} 
+                  isSharedPage={true} 
+                  currentMonthStart={currentMonthStart} 
+                />
               </div>
-
-              <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between border-b border-border pb-2">
-                  <h3 className="font-medium text-lg">{t('page.your_transactions_shared')}</h3>
-                  <CategoriesManager categories={categories} scope="SHARED" />
-                </div>
-                
-                <div className="space-y-6">
-                  {txs.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">{t('page.no_transactions')}</p>
-                  ) : (
-                    <>
-                      {Object.entries(groupedExpenses).map(([catName, catTxsRaw]) => {
-                        const catTxs = catTxsRaw as Transaction[];
-                        const color = catTxs[0]?.categories?.color || "#cccccc";
-                        
-                        const total = catTxs
-                          .filter(t => t.currency === "PLN")
-                          .reduce((sum, t) => t.type === "INCOME" ? sum - Number(t.amount) : sum + Number(t.amount), 0);
-                        
-                        return (
-                          <CategoryGroup
-                            key={catName}
-                            catName={catName}
-                            catTxs={catTxs}
-                            total={total}
-                            color={color}
-                            categories={categories}
-                            transactionsRaw={transactions || []}
-                            onDeleteTransaction={deleteTransaction}
-                            onDeleteTransactions={deleteTransactions}
-                          />
-                        );
-                      })}
-
-                      {incomes.length > 0 && (
-                        <CategoryGroup 
-                          key="income_category"
-                          catName={t('page.income_category') as string}
-                          catTxs={incomes}
-                          total={incomes
-                            .filter(t => t.currency === "PLN")
-                            .reduce((sum, t) => sum - Number(t.amount), 0)
-                          }
-                          color="#10b981"
-                          categories={categories}
-                          transactionsRaw={transactions || []}
-                          onDeleteTransaction={deleteTransaction}
-                          onDeleteTransactions={deleteTransactions}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          }
-          tab2Content={
-            <div className="space-y-4 pt-2">
-              <EnvelopesList 
-                envelopes={envs.filter((e) => e.scope === 'SHARED' || !e.scope)} 
-                isSharedPage={true} 
-                currentMonthStart={currentMonthStart} 
-              />
-            </div>
-          }
-          floatingButton={
-            <FloatingAddButton isSharedPage={true} currentTab="budget" categories={categories} />
-          }
-        />
+            }
+            floatingButton={
+              <FloatingAddButton key="floating-btn" isSharedPage={true} currentTab="budget" categories={categories} />
+            }
+          />
+        </OptimisticProvider>
       </div>
     </MobileAppLayout>
   );

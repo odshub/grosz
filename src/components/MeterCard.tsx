@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { addMeterReading, deleteMeter, deleteMeterReading, updateMeterReading } from "@/app/actions";
 import { useDialog } from "./DialogProvider";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 type Meter = {
   id: string;
@@ -157,12 +158,10 @@ export function MeterCard({ meter, readings, texts }: MeterCardProps) {
         <div className="space-y-3">
           <div className="space-y-1">
             <label className="text-xs font-medium">{texts.date}</label>
-            <input
-              type="date"
+            <CustomDatePicker 
               name="date"
-              required
               defaultValue={reading.date.split('T')[0].slice(0, 10)}
-              className="w-full p-2.5 rounded-lg border border-border bg-background text-foreground dark:scheme-dark"
+              className="w-full p-2.5 rounded-lg border border-border bg-background text-foreground"
             />
           </div>
           <div className="space-y-1">
@@ -316,12 +315,10 @@ export function MeterCard({ meter, readings, texts }: MeterCardProps) {
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-xs font-medium">{texts.date}</label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   name="date"
-                  required
                   defaultValue={getTodayStr()}
-                  className="w-full p-2.5 rounded-lg border border-border bg-background text-foreground dark:scheme-dark"
+                  className="w-full p-2.5 rounded-lg border border-border bg-background text-foreground"
                 />
               </div>
               <div className="space-y-1">

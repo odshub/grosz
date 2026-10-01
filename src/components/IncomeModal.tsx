@@ -1,9 +1,11 @@
 "use client";
-
 import { useState } from "react";
 import { addTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
+import { useOptimisticTransactions } from "./OptimisticProvider";
+import { startTransition } from "react";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 interface IncomeModalProps {
   onClose: () => void;
@@ -16,14 +18,50 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
   const { t } = useTranslation();
   const router = useRouter();
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
+  // Try to use optimistic context (might be null if modal is used outside provider, but here it's inside)
+  let addOptimisticTx: any = null;
+  try {
+    const ctx = useOptimisticTransactions();
+    addOptimisticTx = ctx.addOptimisticTx;
+  } catch (e) {
+    // fallback
+  }
+
+  function handleSubmit(formData: FormData) {
     formData.append("type", "INCOME");
     formData.append("expenseType", "FIXED");
-    await addTransaction(formData);
-    setLoading(false);
-    onClose();
-    router.refresh();
+    
+    // Build optimistic transaction
+    const amount = formData.get("amount") as string;
+    const label = formData.get("label") as string;
+    
+    const fakeTx = {
+      id: `temp-${Date.now()}`,
+      amount: amount,
+      currency: "PLN",
+      type: "INCOME",
+      category_id: null,
+      categories: null,
+      label: label || null,
+      is_paid: true, // Incomes default to paid unless user toggles (not implemented in this modal yet)
+      expense_type: "FIXED",
+      scope: isShared ? "SHARED" : "PERSONAL",
+      created_at: new Date().toISOString(),
+    };
+
+    if (addOptimisticTx) {
+      startTransition(() => {
+        addOptimisticTx(fakeTx);
+        addTransaction(formData);
+      });
+      onClose();
+    } else {
+      setLoading(true);
+      addTransaction(formData).then(() => {
+        setLoading(false);
+        onClose();
+      });
+    }
   }
 
   return (
@@ -50,7 +88,7 @@ export function IncomeModal({ onClose, isSharedPage = false }: IncomeModalProps)
 
             <div>
               <label className="block text-sm font-medium mb-1">{t('modal.expense.operation_date')}</label>
-              <input type="date" name="operationDate" className="w-full p-3 bg-muted rounded-lg outline-none dark:scheme-dark" />
+              <CustomDatePicker name="operationDate" className="w-full p-3 bg-muted rounded-lg outline-none" />
             </div>
 
             <input type="hidden" name="isShared" value={isShared ? "true" : "false"} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { editTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 interface Category {
   id: string;
@@ -41,7 +42,7 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
   const [amount, setAmount] = useState<string>(transaction.amount.toString());
   const [currency, setCurrency] = useState<"PLN" | "USD" | "EUR">(transaction.currency);
   const [label, setLabel] = useState<string>(transaction.label || "");
-  const [operationDate, setOperationDate] = useState<string>(transaction.operationDate ? transaction.operationDate.split('T')[0] : "");
+  const [operationDate] = useState<string>(transaction.operationDate ? transaction.operationDate.split('T')[0] : "");
   const [isRecurring, setIsRecurring] = useState<boolean>(transaction.isRecurring || false);
   const isShared = transaction.isShared;
 
@@ -50,6 +51,8 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
     if (type === "EXPENSE" && !selectedCategory) return;
     if (!amount) return;
     setLoading(true);
+    
+    const formValues = new FormData(e.currentTarget as HTMLFormElement);
     const formData = new FormData();
     formData.append("amount", amount);
     formData.append("currency", currency);
@@ -67,6 +70,11 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
     formData.append("isRecurring", isRecurring ? "true" : "false");
     formData.append("isPaid", transaction.isPaid ? "true" : "false");
     formData.append("isShared", isShared ? "true" : "false");
+    
+    const opDate = formValues.get("operationDate");
+    if (opDate) {
+      formData.append("operationDate", opDate as string);
+    }
     
     await editTransaction(transaction.id, formData);
     setLoading(false);
@@ -159,7 +167,7 @@ export function EditTransactionModal({ onClose, categories, transaction }: EditT
             {type === "EXPENSE" && (
               <div>
                 <label className="block text-sm font-medium mb-1">{t('modal.expense.operation_date')}</label>
-                <input type="date" name="operationDate" value={operationDate} onChange={e => setOperationDate(e.target.value)} className="w-full p-3 bg-muted rounded-lg outline-none dark:scheme-dark" />
+                <CustomDatePicker name="operationDate" defaultValue={operationDate} className="w-full p-3 bg-muted rounded-lg outline-none" />
               </div>
             )}
 

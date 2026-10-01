@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
 import { useRouter } from "next/navigation";
 import { useDialog } from "./DialogProvider";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 interface FloatingTransactionModalProps {
   transaction: {
@@ -133,7 +134,7 @@ export function FloatingTransactionModal({ transaction, subTransactions, onClose
               <input type="number" inputMode="decimal" name="amount" step="0.01" placeholder={t('modal.floating.input_amount') as string} className="w-24 shrink-0 p-3 bg-muted border border-border rounded-xl outline-none text-base focus:ring-2 focus:ring-primary/50 transition-all font-semibold" required />
             </div>
             <div>
-              <input type="date" name="operationDate" className="w-full p-3 bg-muted border border-border rounded-xl outline-none text-base focus:ring-2 focus:ring-primary/50 transition-all dark:scheme-dark" />
+              <CustomDatePicker name="operationDate" className="w-full p-3 bg-muted border border-border rounded-xl outline-none text-base focus:ring-2 focus:ring-primary/50 transition-all" />
             </div>
             <button disabled={loading} type="submit" className="w-full py-3.5 bg-primary text-primary-foreground font-bold text-sm rounded-xl disabled:opacity-50 transition-all hover:bg-primary/90 active:scale-95 shadow-md flex items-center justify-center">
               {loading ? (

@@ -1,9 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import { addTransaction } from "@/app/actions";
 import { useTranslation } from "@/lib/i18n/client";
-import { useRouter } from "next/navigation";
+import { useOptimisticTransactions } from "./OptimisticProvider";
+import { startTransition } from "react";
+import { CustomDatePicker } from "./CustomDatePicker";
 
 interface Category {
   id: string;
@@ -21,7 +22,15 @@ interface AddTransactionModalProps {
 export function AddTransactionModal({ onClose, isSharedPage = false, categories, initialExpenseType = "FIXED" }: AddTransactionModalProps) {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
-  const router = useRouter();
+  
+  // Try to use optimistic context (might be null if modal is used outside provider, but here it's inside)
+  let addOptimisticTx: ((tx: unknown) => void) | null = null;
+  try {
+    const ctx = useOptimisticTransactions();
+    addOptimisticTx = ctx.addOptimisticTx;
+  } catch {
+    // fallback
+  }
   
   // Category state
   const [selectedCategory, setSelectedCategory] = useState<string>(categories[0]?.id || "");
@@ -33,15 +42,44 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories,
   const [isRecurring, setIsRecurring] = useState(false);
   const [isVariableAmount, setIsVariableAmount] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  function handleSubmit(formData: FormData) {
     if (!selectedCategory) return;
-    setLoading(true);
+    
     formData.append("categoryId", selectedCategory);
     formData.append("expenseType", expenseType);
-    await addTransaction(formData);
-    setLoading(false);
-    onClose();
-    router.refresh();
+    
+    // Build optimistic transaction
+    const amount = formData.get("amount") as string;
+    const label = formData.get("label") as string;
+    const cat = categories.find(c => c.id === selectedCategory);
+    
+    const fakeTx = {
+      id: `temp-${Date.now()}`,
+      amount: amount,
+      currency: "PLN",
+      type: "EXPENSE",
+      category_id: selectedCategory,
+      categories: cat || null,
+      label: label || null,
+      is_paid: false, // Expenses default to unpaid if planned
+      expense_type: expenseType,
+      scope: isShared ? "SHARED" : "PERSONAL",
+      created_at: new Date().toISOString(),
+    };
+
+    if (addOptimisticTx) {
+      startTransition(() => {
+        addOptimisticTx(fakeTx);
+        addTransaction(formData);
+      });
+      onClose();
+    } else {
+      setLoading(true);
+      addTransaction(formData).then(() => {
+        setLoading(false);
+        onClose();
+      });
+    }
   }
 
   return (
@@ -61,7 +99,7 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories,
             <input type="hidden" name="expenseType" value={expenseType} />
 
             <div>
-              <label className="block text-sm font-medium mb-1">{expenseType === "FLOATING" ? t('modal.floating.budget' as any) || 'Сума бюджету' : t('modal.expense.amount_sum')}</label>
+              <label className="block text-sm font-medium mb-1">{expenseType === "FLOATING" ? (t('modal.floating.budget') as string) || 'Сума бюджету' : t('modal.expense.amount_sum')}</label>
               <input type="number" inputMode="decimal" name="amount" step="0.01" required className="w-full p-3 bg-muted rounded-lg outline-none" placeholder="0.00" />
             </div>
 
@@ -90,8 +128,8 @@ export function AddTransactionModal({ onClose, isSharedPage = false, categories,
 
             {expenseType === "FIXED" && (
               <div>
-                <label className="block text-sm font-medium mb-1">{t('modal.expense.operation_date' as any) || 'Дата (необов\'язково)'}</label>
-                <input type="date" name="operationDate" className="w-full p-3 bg-muted rounded-lg outline-none dark:scheme-dark" />
+                <label className="block text-sm font-medium mb-1">{(t('modal.expense.operation_date') as string) || 'Дата (необов\'язково)'}</label>
+                <CustomDatePicker name="operationDate" className="w-full p-3 bg-muted rounded-lg outline-none" />
               </div>
             )}
 
