@@ -646,3 +646,115 @@ export async function deleteMeterReading(id: string) {
   await supabaseAdmin.from("meter_readings").delete().eq("id", id);
   revalidatePath("/meters");
 }
+
+export async function updateMeterReading(id: string, formData: FormData) {
+  const date = formData.get("date") as string;
+  const previousReading = parseFloat(formData.get("previousReading") as string) || 0;
+  const currentReading = parseFloat(formData.get("currentReading") as string);
+  const pricePerUnit = parseFloat(formData.get("pricePerUnit") as string);
+
+  const totalCost = (currentReading - previousReading) * pricePerUnit;
+
+  const { error } = await supabaseAdmin.from("meter_readings").update({
+    date,
+    previous_reading: previousReading,
+    current_reading: currentReading,
+    price_per_unit: pricePerUnit,
+    total_cost: totalCost > 0 ? totalCost : 0,
+  }).eq("id", id);
+
+  if (error) {
+    console.error("Error updating meter reading:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/meters");
+  return { success: true };
+}
+
+// ==========================================
+// CREDITS (Кредити)
+// ==========================================
+
+export async function addCredit(formData: FormData) {
+  const { user } = await getCurrentUser();
+  const name = formData.get("name") as string;
+  const totalAmount = parseFloat(formData.get("totalAmount") as string);
+  const paidAmount = parseFloat(formData.get("paidAmount") as string) || 0;
+  const monthlyPayment = parseFloat(formData.get("monthlyPayment") as string);
+  const nextPaymentDate = formData.get("nextPaymentDate") as string || null;
+  const notes = (formData.get("notes") as string) || null;
+
+  const { error } = await supabaseAdmin.from("credits").insert({
+    user_id: user.id,
+    name,
+    total_amount: totalAmount,
+    paid_amount: paidAmount,
+    monthly_payment: monthlyPayment,
+    next_payment_date: nextPaymentDate || null,
+    notes,
+  });
+
+  if (error) {
+    console.error("Error adding credit:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/credits");
+  return { success: true };
+}
+
+export async function updateCredit(id: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  const totalAmount = parseFloat(formData.get("totalAmount") as string);
+  const paidAmount = parseFloat(formData.get("paidAmount") as string) || 0;
+  const monthlyPayment = parseFloat(formData.get("monthlyPayment") as string);
+  const nextPaymentDate = formData.get("nextPaymentDate") as string || null;
+  const notes = (formData.get("notes") as string) || null;
+
+  const { error } = await supabaseAdmin.from("credits").update({
+    name,
+    total_amount: totalAmount,
+    paid_amount: paidAmount,
+    monthly_payment: monthlyPayment,
+    next_payment_date: nextPaymentDate || null,
+    notes,
+  }).eq("id", id);
+
+  if (error) {
+    console.error("Error updating credit:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/credits");
+  return { success: true };
+}
+
+export async function deleteCredit(id: string) {
+  await supabaseAdmin.from("credits").delete().eq("id", id);
+  revalidatePath("/credits");
+}
+
+export async function makeCreditPayment(id: string, amount?: number) {
+  const { data: credit } = await supabaseAdmin.from("credits").select("*").eq("id", id).single();
+  if (!credit) return { error: "Credit not found" };
+
+  const paymentAmount = amount || credit.monthly_payment;
+  const newPaidAmount = Number(credit.paid_amount) + paymentAmount;
+
+  // Calculate next payment date (one month later)
+  let nextDate = null;
+  if (credit.next_payment_date) {
+    const d = new Date(credit.next_payment_date);
+    d.setMonth(d.getMonth() + 1);
+    nextDate = d.toISOString().slice(0, 10);
+  }
+
+  await supabaseAdmin.from("credits").update({
+    paid_amount: newPaidAmount > credit.total_amount ? credit.total_amount : newPaidAmount,
+    next_payment_date: newPaidAmount >= credit.total_amount ? null : nextDate,
+  }).eq("id", id);
+
+  revalidatePath("/credits");
+  return { success: true };
+}

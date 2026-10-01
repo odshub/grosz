@@ -66,9 +66,14 @@ export default async function MetersPage() {
     delete: t('btn.delete'),
     cancel: t('btn.cancel'),
     delete_confirm: t('meters.delete_confirm'),
+    delete_reading_confirm: t('meters.delete_reading_confirm'),
     validation_reading_less: t('meters.validation_reading_less'),
     all_records: t('meters.all_records'),
     nothing_found: t('meters.nothing_found'),
+    edit: t('btn.edit'),
+    save: t('btn.save'),
+    torch: t('meters.torch'),
+    torch_not_supported: t('meters.torch_not_supported'),
   };
 
   return (
